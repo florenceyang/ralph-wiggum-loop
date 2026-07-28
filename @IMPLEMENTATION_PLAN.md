@@ -40,7 +40,7 @@ Recent progress:
 - Implemented inline JavaScript in templates/habits.html to list, create, and delete habits via the API to enable quick manual testing and iteration.
 - Implemented initial frontend React components: frontend/src/components/HabitCell.tsx and frontend/src/components/HabitTable.tsx (minimal rendering). Added unit test for HabitCell and verified frontend tests pass locally (3 test files, 19 tests). These are scaffolding for the full UI; next work is to wire optimistic updates and calendar sync.
 
-Next steps remain: implement full frontend components (HabitTable, HabitCell, CalendarView, Legend, HabitEditor) and client hooks for optimistic updates. Add unit and integration tests for frontend and accessibility checks.
+Next steps remain: implement full frontend components (HabitTable, HabitCell, CalendarView, Legend, HabitEditor) and client hooks for optimistic updates. Implemented useHabits hook (frontend/src/hooks/useHabits.ts) with optimistic toggle and monthly caching, and added unit tests (frontend/src/hooks/__tests__/useHabits.test.tsx). Add remaining integration and accessibility tests for full UI coverage.
 
 Recent change (2026-07-28): Added a "Mark Today" button to the minimal habits UI at src/app/templates/habits.html. This provides a simple single-click way to create/update today's Entry for a habit via POST /api/entries, enabling quick manual testing of entry persistence and API integration. Backend tests run and passed after this UI change.
 
