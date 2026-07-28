@@ -38,6 +38,7 @@ Recent progress:
 - Added server-side shell for Habit Tracker: /habits route (src/app/views/habits.py) and templates/habits.html. This provides the data-island mount point for the frontend Habit Tracker UI.
 - Registered the new blueprint in src/app/views/__init__.py.
 - Implemented inline JavaScript in templates/habits.html to list, create, and delete habits via the API to enable quick manual testing and iteration.
+- Implemented initial frontend React components: frontend/src/components/HabitCell.tsx and frontend/src/components/HabitTable.tsx (minimal rendering). Added unit test for HabitCell and verified frontend tests pass locally (3 test files, 19 tests). These are scaffolding for the full UI; next work is to wire optimistic updates and calendar sync.
 
 Next steps remain: implement full frontend components (HabitTable, HabitCell, CalendarView, Legend, HabitEditor) and client hooks for optimistic updates. Add unit and integration tests for frontend and accessibility checks.
 
