@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Habits{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Habit Tracker</h1>
+
+    {# React Island Mount Point for the Habit Tracker UI #}
+    <div data-island="habits" class="w-full">
+        <noscript>
+            <p class="text-gray-600">A JavaScript-enabled browser is required to use the Habit Tracker UI.</p>
+        </noscript>
+    </div>
+
+    <p class="mt-6 text-gray-500 text-sm">This page is a placeholder shell; the frontend will mount the full Habit Tracker UI here.</p>
+</main>
+{% endblock %}
