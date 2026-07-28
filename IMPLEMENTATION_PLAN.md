@@ -61,12 +61,13 @@
    - Owner/area: frontend (UI, hooks)
 
 6. UX: Add /habits route and root redirect/migration (MEDIUM)
-   - What: Add route /habits (server-side template for islands) and decide whether root '/' should redirect to /habits (spec suggests replacing Hello World).
+   - What: Add route /habits (server-side template for islands) and redirect root '/' to /habits to replace Hello World per spec.
    - Files / refs:
-     - Current root: src/app/views/game.py — index() route serves Space Invaders (lines 16–23).
+     - Current root: src/app/views/game.py — index() route previously served Space Invaders; now redirects to /habits.
      - Spec: specs/habit-tracker-specifications.md — "Route: /habits replaces Hello World" (line ~57).
-     - Update templates: a new templates/habits.html that mounts the habit islands.
-     - Tests: update tests/test_game_view.py or add new tests to assert /habits exists and root redirects if chosen.
+     - Update templates: templates/habits.html mounts the habit islands (already present).
+     - Tests: updated tests/test_game_view.py to assert root redirects and /habits renders the habit shell.
+   - Status: Completed — root now redirects to /habits and tests updated to reflect the change.
    - Risk/complexity: medium
    - Owner/area: backend + frontend (routing/templates)
 

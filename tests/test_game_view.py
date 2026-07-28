@@ -14,23 +14,26 @@ from flask.testing import FlaskClient
 
 
 class TestGamePage:
-    """Tests for the main HTML page that hosts the game."""
+    """Tests for root routing behavior after replacing the game page.
 
-    def test_index_returns_html(self, client: FlaskClient[Any]) -> None:
-        """GET / should return a 200 HTML page."""
+    The application now redirects the root path to /habits per the
+    habit-tracker specification. Also verify that the /habits page renders
+    the habit-tracker shell.
+    """
+
+    def test_root_redirects_to_habits(self, client: FlaskClient[Any]) -> None:
+        """GET / should redirect to /habits."""
         response = client.get('/')
+        assert response.status_code in (301, 302)
+        location = response.headers.get('Location', '')
+        assert '/habits' in location
+
+    def test_habits_page_returns_html(self, client: FlaskClient[Any]) -> None:
+        """GET /habits should return a 200 HTML page with the habit app shell."""
+        response = client.get('/habits')
         assert response.status_code == 200
-        assert b'Space Invaders' in response.data
-
-    def test_index_contains_island_mount(self, client: FlaskClient[Any]) -> None:
-        """Index page should contain the game island mount point."""
-        response = client.get('/')
-        assert b'data-island="game"' in response.data
-
-    def test_index_title(self, client: FlaskClient[Any]) -> None:
-        """The page <title> should advertise Space Invaders."""
-        response = client.get('/')
-        assert b'<title>Space Invaders</title>' in response.data
+        assert b'Habit Tracker' in response.data
+        assert b'<title>Habits</title>' in response.data
 
 
 class TestErrorHandlers:
