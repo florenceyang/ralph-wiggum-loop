@@ -19,6 +19,14 @@ export const HabitCell: React.FC<HabitCellProps> = ({
 }) => {
   const handleClick = () => onToggle && onToggle(date);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Activate on Enter or Space for keyboard accessibility
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   const style: React.CSSProperties = {
     width: size,
     height: size,
@@ -38,6 +46,7 @@ export const HabitCell: React.FC<HabitCellProps> = ({
       aria-pressed={marked}
       aria-label={`Habit: ${icon} — ${date} — ${marked ? 'marked' : 'unmarked'}`}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       style={style}
       data-testid={`habit-cell-${date}`}
     >

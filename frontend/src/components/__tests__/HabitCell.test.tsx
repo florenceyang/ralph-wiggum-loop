@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import HabitCell from '../HabitCell';
 
 describe('HabitCell', () => {
-  it('renders and toggles', () => {
+  it('renders and toggles via mouse and keyboard', () => {
     const onToggle = vi.fn();
     render(<HabitCell date="2026-07-10" marked={false} icon="heart" color="#ff0000" onToggle={onToggle} />);
 
@@ -12,7 +12,16 @@ describe('HabitCell', () => {
     expect(btn).toBeInTheDocument();
     expect(btn).toHaveAttribute('aria-pressed', 'false');
 
+    // click
     fireEvent.click(btn);
+    expect(onToggle).toHaveBeenCalledWith('2026-07-10');
+
+    // keyboard: Enter
+    fireEvent.keyDown(btn, { key: 'Enter' });
+    expect(onToggle).toHaveBeenCalledWith('2026-07-10');
+
+    // keyboard: Space
+    fireEvent.keyDown(btn, { key: ' ' });
     expect(onToggle).toHaveBeenCalledWith('2026-07-10');
   });
 });
