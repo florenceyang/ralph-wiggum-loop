@@ -30,7 +30,7 @@ Notes
 - Warnings from SQLAlchemy about Query.get() were addressed: Query.get() calls replaced with db.session.get(Model, id) in API modules to remove deprecation warnings; tests run and passed.
 - The minimal client UI uses simple glyphs for icons and maps icon names to glyphs; the full frontend should render SVG icons and provide an accessible icon picker.
 
-Status: IN_PROGRESS - frontend implementation (Day 1 wires & Day 2–4 table UI).
+Status: IN_PROGRESS - root redirect implemented; frontend implementation (Day 1 wires & Day 2–4 table UI) ongoing.
 
 Test results: Backend habit API tests passed locally (5 passed, 12 warnings). Next immediate task: implement frontend components HabitTable and HabitCell (frontend/src/components) to satisfy core UI acceptance criteria and add unit tests for them.
 
