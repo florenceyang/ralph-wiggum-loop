@@ -14,6 +14,7 @@ Findings
 
 Next highest-priority work
 1. Frontend: implement HabitTable, HabitCell, CalendarView, Legend, HabitEditor components (frontend/src/components). These are required to satisfy the UI acceptance criteria in specs.
+   - Status (2026-07-28): HabitEditor implemented (frontend/src/components/HabitEditor.tsx) with unit tests added; frontend vitest suite passes locally.
    - Create full React components with keyboard accessibility and ARIA labels.
    - Implement client caching and optimistic updates in frontend/src/hooks/useHabits.ts.
    - Use existing backend API endpoints for persistence and bulk entries.
