@@ -1,68 +1,189 @@
-# Implementation Plan — Space Invaders Classic Gameplay
+1. Backend: Add Habit & Entry models + DB migration (HIGH)
+   - What: Create SQLAlchemy models Habit and Entry and an Alembic migration to create tables.
+   - Why: Core persistent data missing; API and tests depend on schema.
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "Data model" (lines ~32–36).
+     - Missing: create src/app/models/habit.py and src/app/models/entry.py.
+     - Migration: create migrations/versions/<rev>\_create_habits_entries.py (no existing migration for habits; see existing hello migration: migrations/versions/e31396db40b1_create_hello_table.py).
+     - Tests: add tests/models/test_habit_entry.py
+   - Risk/complexity: high
+   - Owner/area: backend (models, migrations, DB)
+   - Notes: follow timestamp/UUID columns and indexes for (habit_id, date) queries; use same db instance in src/app/models/base.py.
 
-## Status
+2. Backend: Implement REST API endpoints per spec (HIGH)
+   - What: Implement GET/POST/PUT/DELETE /api/habits and GET/POST/DELETE /api/entries and POST /api/entries/bulk.
+   - Why: Client depends on these to persist/retrieve habits and entries.
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "API (REST)" (lines ~38–48 and ~44–47).
+     - New files: src/app/views/api_habits.py, src/app/views/api_entries.py (or package src/app/api).
+     - Register blueprints: update src/app/views/**init**.py to register API blueprints.
+     - Tests: tests/test_api_habits.py, tests/test_api_entries.py (integration tests using tests/conftest.py fixtures).
+   - Risk/complexity: high
+   - Owner/area: backend (API)
 
-> **Overall: 100% Complete — Feature implemented, all validation green.**
+3. Backend: Enforce icon+color uniqueness & validation (MEDIUM)
+   - What: Validate that (icon, color) pair is unique per user; return 400 on violation; server-side defaults if icon/color absent.
+   - Why: Business rule in spec (icon+color uniqueness).
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "Business rule" (lines ~34–36) and "API notes" (line ~48).
+     - Implement in models/habit.py + API input validation layer (schemas or marshmallow/pydantic).
+     - Tests: unit tests for validation.
+   - Risk/complexity: medium
+   - Owner/area: backend (models + controllers)
 
-Spec: `specs/space-invaders-classic-gameplay.md` (comprehensive, self-contained).
+4. Backend: Bulk entries endpoint (POST /api/entries/bulk) + transactional behavior (MEDIUM)
+   - What: Implement efficient bulk create/update with DB transaction and validation of date ranges.
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "/api/entries/bulk" (line ~46).
+     - New endpoint: src/app/views/api_entries.py
+     - Tests: tests/test_api_entries_bulk.py
+   - Risk/complexity: medium
+   - Owner/area: backend (API)
 
-The Hello World scaffold has been fully removed and replaced with a client-side
-Space Invaders game mounted via the React Islands architecture. All unit tests
-(pytest + vitest), type checks (mypy + tsc), linters (flake8 + eslint), and
-Playwright E2E tests pass.
+5. Frontend: Implement core components and data hook (HIGH)
+   - What: Implement components listed in spec: HabitTable, HabitCell, CalendarView, Legend, HabitEditor, and client hook useHabits.ts (optimistic updates + monthly caching).
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "Files & components" (lines ~105–113) and multiple UI sections (table/calendar/legend).
+     - New files: frontend/src/components/HabitTable.tsx, HabitCell.tsx, CalendarView.tsx, Legend.tsx, HabitEditor.tsx; frontend/src/hooks/useHabits.ts.
+     - Tests: frontend unit tests for each component (frontend/tests/components/\*).
+   - Risk/complexity: high
+   - Owner/area: frontend (UI, hooks)
 
----
+6. UX: Add /habits route and root redirect/migration (MEDIUM)
+   - What: Add route /habits (server-side template for islands) and decide whether root '/' should redirect to /habits (spec suggests replacing Hello World).
+   - Files / refs:
+     - Current root: src/app/views/game.py — index() route serves Space Invaders (lines 16–23).
+     - Spec: specs/habit-tracker-specifications.md — "Route: /habits replaces Hello World" (line ~57).
+     - Update templates: a new templates/habits.html that mounts the habit islands.
+     - Tests: update tests/test_game_view.py or add new tests to assert /habits exists and root redirects if chosen.
+   - Risk/complexity: medium
+   - Owner/area: backend + frontend (routing/templates)
 
-## What was built (2026-05-29)
+7. Frontend: Accessibility & keyboard nav (HIGH)
+   - What: Implement ARIA attributes, keyboard focus handling, and screen-reader labels described in spec.
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "Accessibility" (lines ~69–73) and table interactions (lines ~59–63).
+     - Implement in components and add automated accessibility tests (axe, or E2E checks).
+     - Tests: integration E2E scripts to cover keyboard navigation.
+   - Risk/complexity: medium
+   - Owner/area: frontend (a11y)
 
-### Backend
-- `src/app/views/game.py` — `game_bp`; `GET /` renders `game.html` (no DB, no API).
-- `src/app/templates/game.html` — extends `base.html`; title "Space Invaders" + `data-island="game"` mount + `<noscript>` fallback.
-- Registered `game_bp` in `src/app/views/__init__.py`.
-- `migrations/versions/f1a2b3c4d5e6_drop_hello_table.py` — drops `hello` (down recreates it), chained after the original create migration so `script/setup` stays reproducible.
-- Removed: `views/hello.py`, `controllers/hello.py`, `models/hello.py`, `schemas/hello.py`, `templates/hello/`, and cleared their `__init__` exports.
-- `tests/test_game_view.py` — `GET /` 200, contains `data-island="game"`, title is "Space Invaders". Retained `TestErrorHandlers` (404 HTML/JSON) so error-handler coverage survives.
+8. Frontend: Bulk-marking, undo/redo, selection mechanics (MEDIUM)
+   - What: Implement shift+click/drag range select, undo/redo stack, keyboard ranges (Shift+Arrows), and bulk API integration.
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "Editing & interactions" (lines ~21–23, ~59–63).
+     - Implement in HabitTable + useHabits hooks.
+     - Tests: unit + integration tests for selection and undo/redo.
+   - Risk/complexity: medium-high
+   - Owner/area: frontend (UI & hooks)
 
-### Frontend engine (`frontend/src/game/`, framework-agnostic, dt-based)
-- `types.ts`, `constants.ts` (px/s speeds; 5×11 grid; per-row points; colors).
-- `Bullet.ts` (sign of speed = direction; off-screen → dead).
-- `Player.ts` (bounds-clamped movement; shot cooldown rate-limits held Space).
-- `Alien.ts` (thin data class) + `AlienGrid.ts` (lock-step march, edge reverse+descend, speed-up as swarm thins, bottom-of-column firing, `reachedBottom`, `isCleared`).
-- `InputHandler.ts` (held-key set + edge-triggered `consumeStart()`; `destroy()` removes listeners).
-- `Renderer.ts` (geometric shapes only; start/gameover/win screens; HUD score).
-- `SpaceInvaders.ts` (RAF loop, frame-rate-independent dt clamped to 0.05s, AABB collisions, state machine start→playing→won/gameover→restart, `start()`/`reset()`/`destroy()`).
+9. Frontend: Calendar interactions & overflow rendering (MEDIUM)
+   - What: Calendar shows up to 4 icons/day, overflow +N indicator, click-to-focus behavior, tooltips with notes.
+   - Files / refs:
+     - Spec: specs/habit-tracker-specifications.md — "Calendar view" (lines ~25–31).
+     - Implement in CalendarView.tsx; tests and visual snapshots for overflow.
+   - Risk/complexity: medium
+   - Owner/area: frontend (UI)
 
-### Island integration
-- `frontend/src/islands/game/GameIsland.tsx` — thin React wrapper; creates engine + `start()` on mount, `destroy()` on unmount.
-- `frontend/src/islands/game/index.tsx` — `mount()` clears fallback and renders.
-- `frontend/src/main.ts` registry maps `game: () => import('./islands/game')`.
-- `frontend/src/types/index.ts` — Hello types removed, generic `IslandProps` kept.
-- Removed Hello frontend + `frontend/tests/islands/hello/`.
+10. Tests: Comprehensive test coverage (HIGH)
+    - What: Add unit tests for backend models and API, frontend component tests, integration tests for table↔calendar sync, and E2E tests that simulate the user flows in the spec.
+    - Files / refs:
+      - Spec: specs/habit-tracker-specifications.md — "Testing & validation" (lines ~98–104).
+      - New tests: tests/test*api*_.py, frontend/tests/components/_, e2e/ Playwright scenarios for create habit, bulk marking, calendar sync.
+      - Use tests/conftest.py fixtures (already present) to run backend tests.
+    - Risk/complexity: high
+    - Owner/area: tests + frontend + backend
 
-### Tests
-- `frontend/tests/game/entities.test.ts` (11) — boundary clamp, bullet pruning, swarm reversal/descent, column-front firing, clear/reachedBottom.
-- `frontend/tests/game/SpaceInvaders.test.ts` (7) — state transitions, win/lose, restart, missing-context throw, destroy cleanup (stub canvas context).
-- `e2e/game.spec.ts` (4) — title, canvas 800×600 visible, no console errors on input, canvas changes on Space.
+11. Performance & virtualization for large row counts (LOW→MEDIUM)
+    - What: Add virtualization for table rows and cap day columns at 31; ensure bulk endpoints are efficient.
+    - Files / refs:
+      - Spec: specs/habit-tracker-specifications.md — "Performance" (line ~23) and "Visual & implementation notes" (lines ~83–88).
+      - Implement using windowing (e.g., react-window) in HabitTable.
+    - Risk/complexity: medium
+    - Owner/area: frontend
 
----
+12. Shared utilities: Create src/lib and consolidate common code (LOW)
+    - What: Add src/lib for shared utilities (date helpers, icon set, color palette, ARIA helpers, API client wrappers); move duplicates there.
+    - Files / refs:
+      - Current: no src/lib directory present (note).
+      - New: src/lib/icons.py or frontend/src/lib/icons.tsx, src/lib/colors.py, src/lib/date_utils.py.
+    - Risk/complexity: low
+    - Owner/area: shared (backend/frontend)
 
-## Validation results (all green)
-- `PYTHONPATH=src pytest tests/` → 5 passed.
-- `cd frontend && npm test` → 18 passed.
-- `mypy src/` → clean (10 files). `flake8 src/ tests/` → clean.
-- `cd frontend && npm run typecheck` (tsc) → clean. `npm run lint` (eslint) → clean.
-- `npx playwright test --reporter=list` → 4 passed.
-- `cd frontend && npm run build` → production bundle builds clean.
+13. Docs & README updates (LOW)
+    - What: Add migration notes, API docs, and developer setup steps (bootstrap/setup/test commands are documented—update to include habit feature).
+    - Files / refs:
+      - Update README.md and add specs/api-habits.md / specs/frontend-components.md (see proposed filenames below).
+    - Risk/complexity: low
+    - Owner/area: docs
 
----
+14. CI / tests integration (LOW→MEDIUM)
+    - What: Ensure CI runs backend tests (pytest), frontend tests (vitest), and E2E (Playwright) as needed; update pipelines to run new tests.
+    - Files / refs:
+      - Existing scripts: script/test, script/test-e2e (custom).
+    - Risk/complexity: low→medium
+    - Owner/area: infra / CI
 
-## Notes / learnings
-- Run E2E with `--reporter=list` in agent/CI shells; the default `html` reporter opens a blocking report server (this caused an initial hang). Recorded in AGENTS.md.
-- Playwright browsers must be installed once: `npx playwright install chromium`.
-- `vite build` empties `src/app/static/` (emptyOutDir) and removes `.gitkeep`; restore it after a local build. Built assets under `src/app/static/assets|.vite` are gitignored.
-- ESLint flat config has no DOM type globals, so avoid `as EventListener` casts in engine code — type handlers as `(e: Event)` and narrow internally.
-- tsc `noUnusedLocals`/`noUnusedParameters` is on: don't store constructor params you don't reference; underscore-prefix intentionally-unused params (`_props`).
+Checks / quick cross-references (high-confidence citations)
 
-## Out of scope (per spec)
-Persistent high scores / new model+API, multiple levels, power-ups, sound,
-mobile touch controls, sprite assets.
+- Spec exists: specs/habit-tracker-specifications.md — Data model (lines ~32–36), API (lines ~38–48), UI components (lines ~105–113), Testing (lines ~98–104).
+- Current root app serves game island: src/app/views/game.py — index route (lines 16–23).
+- No existing habit models or API files: src/app/models/ contains only base.py (src/app/models/**init**.py) and no habit/entry models.
+- Migrations: migrations/versions contains hello table migration only (migrations/versions/e31396db40b1_create_hello_table.py).
+- Tests: backend test coverage limited to tests/test_game_view.py (see tests/test_game_view.py, e.g., test_index_returns_html lines ~19–33). Frontend tests cover SpaceInvaders (frontend/tests/game/SpaceInvaders.test.ts).
+- No src/lib present — consolidate shared utilities there.
+
+Search & quality findings (TODOs, placeholders, flakiness)
+
+- Placeholders / notes:
+  - src/app/static/.gitkeep contains "# Placeholder for Vite build output".
+  - frontend/tests/game/SpaceInvaders.test.ts contains comment "Minimal CanvasRenderingContext2D stub" (intended) — not an implementation TODO but a test stub.
+  - Various prompt and agent docs contain "placeholder" guidance (docs, .github), not code TODOs.
+- No tests marked skipped/xfail/flaky found in repo search (high-confidence).
+- No "NotImplementedError" or obvious stubbed Python functions found in core backend code.
+
+Duplication & src/lib recommendation
+
+- Duplication risk: no explicit duplicated logic found, but absence of src/lib means future habit features may copy date/icon utilities between backend & frontend — recommend src/lib for shared server-side helpers and frontend/src/lib for shared client utilities (icons, palettes, date utils, ARIA helpers).
+
+Test coverage gaps (explicit)
+
+- Backend:
+  - No model unit tests for Habit/Entry (missing).
+  - No API integration tests for /api/habits or /api/entries (missing).
+  - No migration for new tables (missing).
+- Frontend:
+  - No components for habit UI, thus no unit tests/integration tests exist for them (missing).
+  - E2E Playwright tests for the habit flows are missing.
+- Existing tests:
+  - tests/test_game_view.py only validates the game HTML shell and error handlers (see tests/test_game_view.py lines ~19–33, ~43–58). This is appropriate for current game but not for habit feature.
+
+Intentional vs accidental omissions
+
+- Intentional: The Space Invaders game is intentionally implemented; the habit-tracker spec appears to be a planned replacement or optional feature (spec file present in specs/ and prompts in prompts.txt). The existing hello migration and game route suggest the repo intentionally includes an interactive app rather than the habit feature at this time.
+- Accidental/To-do: Habit models, APIs, migrations, frontend components, validation, and tests are missing — likely intentional (proposal stage) but must be implemented to satisfy the spec.
+
+Recommended minimum first iteration (MVP) to deliver spec acceptance quickly
+
+- Implement backend models + migration (task 1)
+- Implement GET/POST /api/habits and GET /api/entries?month=YYYY-MM and POST /api/entries (task 2)
+- Add basic frontend HabitTable + CalendarView + useHabits hook that toggles a cell and persists (tasks 5 & 6)
+- Add integration tests: backend API tests and a single E2E scenario: create habit, mark day, verify calendar shows icon (task 10)
+  Estimated time (rough): 8–12 developer days for one experienced fullstack dev (backend + frontend) to reach acceptance-criteria-lowbar (persistence, basic UI, sync, tests).
+
+Files to create under specs/ (filenames + one-paragraph summaries)
+
+1. specs/api-habits.md
+   - Summary: Detailed API contract for /api/habits endpoints: request/response schemas (JSON examples), validation rules (name length, icon enum, color hex format), status codes, error payloads, and uniqueness constraints for (icon,color) per user. Include example curl requests and expected responses, and backward-compatibility notes for default assignments.
+
+2. specs/api-entries.md
+   - Summary: Detailed API contract for /api/entries and /api/entries/bulk: per-entry payload formats, idempotency behavior (POST for create/update), transactional behavior for bulk updates, conflict resolution rules for optimistic updates, and expected query parameters (month=YYYY-MM). Include performance notes for large ranges and server-side validation rules.
+
+3. specs/frontend-components.md
+   - Summary: Component-level spec for HabitTable, HabitCell, CalendarView, Legend, and HabitEditor: props, events, accessible roles/aria attributes, keyboard behavior, state shape expected from useHabits hook, snapshot examples for overflow states and mobile layout breakpoints, and a small style guide for icon sizes/color palette.
+
+4. specs/accessibility.md
+   - Summary: Accessibility acceptance criteria and test checklist: ARIA attributes and labels required, keyboard focus flow, screen reader text examples, color contrast thresholds, and a plan for automated a11y checks in CI (axe or similar).
+
+5. specs/migrations.md
+   - Summary: Migration plan describing DB schema changes (habits and entries tables), rollout strategy, data migration and rollback considerations, and alembic revision naming convention + example migration file content.
