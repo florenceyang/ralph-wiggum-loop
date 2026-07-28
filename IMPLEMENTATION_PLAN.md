@@ -31,13 +31,14 @@
    - Owner/area: backend (API)
 
 3. Backend: Enforce icon+color uniqueness & validation (MEDIUM)
-   - What: Validate that (icon, color) pair is unique per user; return 400 on violation; server-side defaults if icon/color absent.
-   - Why: Business rule in spec (icon+color uniqueness).
+   - What: Validate that (icon, color) pair is unique per user; return 400 on violation; server-side defaults if icon/color absent. Also enforce formats: color must be hex (#RRGGBB), icon must be non-empty <=64 chars, name must be 1..255 chars.
+   - Why: Business rule in spec (icon+color uniqueness) and input sanitization.
    - Files / refs:
      - Spec: specs/habit-tracker-specifications.md — "Business rule" (lines ~34–36) and "API notes" (line ~48).
-     - Implement in models/habit.py + API input validation layer (schemas or marshmallow/pydantic).
-     - Tests: unit tests for validation.
-   - Risk/complexity: medium
+     - Implemented: src/app/views/api_habits.py (server-side validation added).
+     - Tests: tests/test_api_habits_validation.py added (covers invalid color and name length).
+   - Status: Completed — implemented server-side validation and corresponding unit tests.
+   - Risk/complexity: low
    - Owner/area: backend (models + controllers)
 
 4. Backend: Bulk entries endpoint (POST /api/entries/bulk) + transactional behavior (MEDIUM)
