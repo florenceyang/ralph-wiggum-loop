@@ -2,4 +2,4 @@
 
 Exports all request/response schemas for API validation.
 """
-__all__: list[str] = []
+__all__ = ['HabitCreate', 'HabitResponse', 'EntryCreate', 'EntryResponse']

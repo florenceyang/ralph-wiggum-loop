@@ -11,3 +11,7 @@ doesn't ask clarifying questions, just generates once and wants to move onto nex
 generated implementation plan but never put it in the repo (stayed within the agent session) -- needed to manually copy and paste
 
 giving it wrong context by telling it to replace hello world rlly affects quality / waste context since it processed space invaders files when it was just suppsed to remove them
+
+hallucinated within the loop and created another implementation_plan denoted with @IMPLEMENTATION_PLAN.md instead of IMPLEMENTATION_PLAN.md.
+could not do anything to interfere with loop unless wanted to just stop it and let it continue after based on current state of implementaiton plan (however this may be missing things since files split off)
+let it run to see what final state we are working with (as Rust reading mentioned - update system after, don't directly update the incorrect code changes)
