@@ -71,7 +71,8 @@ function renderHabitItem(h) {
       <small class="text-gray-500 ml-2">${h.icon} ${h.color}</small>
     </div>
     <div>
-      <button data-id="${h.id}" class="delete-btn bg-red-500 text-white rounded px-2 py-1">Delete</button>
+    <button data-id="${h.id}" class="toggle-btn bg-green-500 text-white rounded px-2 py-1 mr-2">Today</button>
+    <button data-id="${h.id}" class="delete-btn bg-red-500 text-white rounded px-2 py-1">Delete</button>
     </div>
   `;
   return li;
@@ -138,6 +139,30 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('habits-list').addEventListener('click', async (ev) => {
+    const toggleBtn = ev.target.closest('.toggle-btn');
+    if (toggleBtn) {
+      const id = toggleBtn.getAttribute('data-id');
+      document.getElementById('status').textContent = 'Marking today...';
+      try {
+        const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+        const res = await fetch('/api/entries', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({habit_id: id, date: today, done: true}),
+        });
+        if (res.ok) {
+          document.getElementById('status').textContent = 'Marked today.';
+        } else {
+          const err = await res.json();
+          document.getElementById('status').textContent = err.error || 'Failed to mark today';
+        }
+      } catch (e) {
+        document.getElementById('status').textContent = 'Failed to mark today';
+        console.error(e);
+      }
+      return;
+    }
+
     const btn = ev.target.closest('.delete-btn');
     if (!btn) return;
     const id = btn.getAttribute('data-id');

@@ -39,6 +39,8 @@ Recent progress:
 
 Next steps remain: implement full frontend components (HabitTable, HabitCell, CalendarView, Legend, HabitEditor) and client hooks for optimistic updates. Add unit and integration tests for frontend and accessibility checks.
 
+Recent change (2026-07-28): Added a "Mark Today" button to the minimal habits UI at src/app/templates/habits.html. This provides a simple single-click way to create/update today's Entry for a habit via POST /api/entries, enabling quick manual testing of entry persistence and API integration. Backend tests run and passed after this UI change.
+
 Immediate changes taken (2026-07-28):
 - Added DELETE /api/entries/<entry_id> endpoint to remove single entries.
 - Added PATCH /api/entries/<entry_id> endpoint to support partial updates (done, note).
