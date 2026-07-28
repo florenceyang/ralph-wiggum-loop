@@ -27,7 +27,7 @@ Immediate actions taken
 - Implemented a minimal client-side UI in src/app/templates/habits.html providing habit list, create, and delete using existing API endpoints. This serves as a pragmatic wireframe and manual-test surface while full frontend components are built.
 
 Notes
-- Warnings from SQLAlchemy about Query.get() are visible; consider updating to Session.get() in a follow-up.
+- Warnings from SQLAlchemy about Query.get() were addressed: Query.get() calls replaced with db.session.get(Model, id) in API modules to remove deprecation warnings; tests run and passed.
 - The minimal client UI uses simple glyphs for icons and maps icon names to glyphs; the full frontend should render SVG icons and provide an accessible icon picker.
 
 Status: IN_PROGRESS - frontend implementation (Day 1 wires & Day 2–4 table UI)

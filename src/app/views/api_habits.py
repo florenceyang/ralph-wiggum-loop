@@ -100,7 +100,7 @@ def create_habit():  # type: ignore[no-untyped-def]
 @api_habits_bp.route('/habits/<habit_id>', methods=['PUT'])
 def update_habit(habit_id):  # type: ignore[no-untyped-def]
     data = request.get_json() or {}
-    habit = Habit.query.get(habit_id)
+    habit = db.session.get(Habit, habit_id)
     if not habit:
         return jsonify({'error': 'habit not found'}), 404
 
@@ -161,7 +161,7 @@ def update_habit(habit_id):  # type: ignore[no-untyped-def]
 
 @api_habits_bp.route('/habits/<habit_id>', methods=['DELETE'])
 def delete_habit(habit_id):  # type: ignore[no-untyped-def]
-    habit = Habit.query.get(habit_id)
+    habit = db.session.get(Habit, habit_id)
     if not habit:
         return jsonify({'error': 'habit not found'}), 404
 

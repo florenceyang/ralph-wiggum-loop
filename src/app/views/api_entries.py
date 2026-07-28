@@ -57,7 +57,7 @@ def create_or_update_entry():  # type: ignore[no-untyped-def]
         return jsonify({'error': 'habit_id and date are required'}), 400
 
     # validate habit exists
-    habit = Habit.query.get(habit_id)
+    habit = db.session.get(Habit, habit_id)
     if not habit:
         return jsonify({'error': 'habit not found'}), 404
 
@@ -111,7 +111,7 @@ def bulk_entries():  # type: ignore[no-untyped-def]
                 if not habit_id or not date_str:
                     raise ValueError('habit_id and date are required for each entry')
 
-                habit = Habit.query.get(habit_id)
+                habit = db.session.get(Habit, habit_id)
                 if not habit:
                     # Abort early with a 404 for missing habit
                     return jsonify({'error': 'habit not found', 'habit_id': habit_id}), 404
@@ -146,7 +146,7 @@ def bulk_entries():  # type: ignore[no-untyped-def]
 @api_entries_bp.route('/entries/<entry_id>', methods=['DELETE'])
 def delete_entry(entry_id):  # type: ignore[no-untyped-def]
     """Delete a single entry by ID."""
-    entry = Entry.query.get(entry_id)
+    entry = db.session.get(Entry, entry_id)
     if not entry:
         return jsonify({'error': 'entry not found'}), 404
 
@@ -164,7 +164,7 @@ def delete_entry(entry_id):  # type: ignore[no-untyped-def]
 def patch_entry(entry_id):  # type: ignore[no-untyped-def]
     """Partial update for an entry (supports done and note)."""
     data = request.get_json() or {}
-    entry = Entry.query.get(entry_id)
+    entry = db.session.get(Entry, entry_id)
     if not entry:
         return jsonify({'error': 'entry not found'}), 404
 
