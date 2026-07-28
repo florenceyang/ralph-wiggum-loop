@@ -1,0 +1,17 @@
+/yolo on
+
+# SPEC
+
+Create a specification for a habit-tracking website feature that will replace the hello world in the repo. This feature conists of two main components:
+┃ (1) Editable, scrollable table (columns: days of the month, rows: habit). Each of the squares in this
+┃ table can be marked with a colored shape to indicate if the habit was done on that specific day
+┃ (2) Calendar that maps each of the marked habits in the table to the corresponding day in the calendar
+┃ (example: red heart for habit 1, yellow diamond for habit 2)
+
+update the specification to use the same icons for one habit across the days. different habits should have different icons / colors to differentiate themselves on the calendar. once this is updated in the specifications, generate the specifications.md file with all this
+
+# REVIEW SPEC
+/review @specs/habit-tracker-specifications.md
+
+# PLAN
+./loop.sh -m plan -n 2

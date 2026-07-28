@@ -1,3 +1,8 @@
+# Updates
+
+- [x] Backend models & migration implemented (migrations/versions/9b1c2d3e4f5a_create_habits_entries.py)
+- Tests added: tests/models/test_habit_entry.py — verified passing
+
 1. Backend: Add Habit & Entry models + DB migration (HIGH)
    - What: Create SQLAlchemy models Habit and Entry and an Alembic migration to create tables.
    - Why: Core persistent data missing; API and tests depend on schema.
