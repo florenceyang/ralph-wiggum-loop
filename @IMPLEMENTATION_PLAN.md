@@ -53,3 +53,5 @@ Validation:
 - Ran full backend test suite; all tests passed (14 passed, 24 warnings).
 
 Status: IN_PROGRESS - backend API surface completed for entry deletion/patch; frontend minimal UI implemented. Full frontend components remain on the plan.
+
+- 2026-07-28: Implemented HabitTable marked-state rendering from entries prop and added HabitTable unit test.
