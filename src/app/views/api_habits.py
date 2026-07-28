@@ -4,7 +4,7 @@ Provides GET /api/habits and POST /api/habits
 """
 from flask import Blueprint, jsonify, request
 
-from app.models import db, Habit
+from app.models import db, Habit, Entry
 
 api_habits_bp = Blueprint('api_habits', __name__, url_prefix='/api')
 
@@ -68,3 +68,72 @@ def create_habit():  # type: ignore[no-untyped-def]
         }),
         201,
     )
+
+
+@api_habits_bp.route('/habits/<habit_id>', methods=['PUT'])
+def update_habit(habit_id):  # type: ignore[no-untyped-def]
+    data = request.get_json() or {}
+    habit = Habit.query.get(habit_id)
+    if not habit:
+        return jsonify({'error': 'habit not found'}), 404
+
+    name = data.get('name')
+    icon = data.get('icon')
+    color = data.get('color')
+    order = data.get('order')
+
+    # If both icon and color provided (or either), ensure uniqueness across other habits
+    if icon and color:
+        existing = (
+            Habit.query.filter(Habit.icon == icon, Habit.color == color)
+            .filter(Habit.id != habit_id)
+            .first()
+        )
+        if existing:
+            return (
+                jsonify({'error': 'icon+color pair must be unique', 'conflict_id': existing.id}),
+                400,
+            )
+
+    if name is not None:
+        habit.name = name
+    if icon is not None:
+        habit.icon = icon
+    if color is not None:
+        habit.color = color
+    if order is not None:
+        try:
+            habit.order = int(order)
+        except Exception:
+            return jsonify({'error': 'order must be an integer'}), 400
+
+    db.session.commit()
+
+    return (
+        jsonify({
+            'id': habit.id,
+            'name': habit.name,
+            'icon': habit.icon,
+            'color': habit.color,
+            'order': habit.order,
+        }),
+        200,
+    )
+
+
+@api_habits_bp.route('/habits/<habit_id>', methods=['DELETE'])
+def delete_habit(habit_id):  # type: ignore[no-untyped-def]
+    habit = Habit.query.get(habit_id)
+    if not habit:
+        return jsonify({'error': 'habit not found'}), 404
+
+    # Remove associated entries, then the habit
+    try:
+        Entry.query.filter_by(habit_id=habit_id).delete()
+        db.session.delete(habit)
+        db.session.commit()
+    except Exception as exc:  # pragma: no cover - error path
+        db.session.rollback()
+        return jsonify({'error': 'delete failed', 'message': str(exc)}), 500
+
+    return jsonify({'deleted': True}), 200

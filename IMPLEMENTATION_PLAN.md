@@ -16,16 +16,16 @@
    - Owner/area: backend (models, migrations, DB)
    - Notes: follow timestamp/UUID columns and indexes for (habit_id, date) queries; use same db instance in src/app/models/base.py.
 
-2. Backend: Implement REST API endpoints per spec (HIGH) — PARTIALLY COMPLETED
-   - What (initial): Implement GET/POST for /api/habits and GET/POST for /api/entries (basic create/list/update semantics). Remaining: PUT/DELETE for habits, DELETE for entries, and POST /api/entries/bulk.
+2. Backend: Implement REST API endpoints per spec (HIGH) — UPDATED: PUT/DELETE implemented
+   - What (initial): Implement GET/POST for /api/habits and GET/POST for /api/entries (basic create/list/update semantics). Implemented additional endpoints: PUT/DELETE for /api/habits and the /api/entries/bulk transactional endpoint.
    - Why: Client depends on these to persist/retrieve habits and entries.
-   - Files / refs (added):
-     - src/app/views/api_habits.py (GET /api/habits, POST /api/habits)
-     - src/app/views/api_entries.py (GET /api/entries?month=YYYY-MM, POST /api/entries)
+   - Files / refs (added/modified):
+     - src/app/views/api_habits.py (GET/POST/PUT/DELETE)
+     - src/app/views/api_entries.py (GET /api/entries?month=YYYY-MM, POST /api/entries, POST /api/entries/bulk)
      - Updated: src/app/views/__init__.py to register new blueprints
-     - Tests added: tests/test_api_habits.py, tests/test_api_entries.py
-   - Status: targeted tests for the above endpoints passed (2 tests) in CI-local run.
-   - Next work: add PUT/DELETE endpoints, implement /api/entries/bulk with transactional behavior, and add validation schemas and stronger uniqueness checks per-user.
+     - Tests added/updated: tests/test_api_habits.py (now includes update/delete tests), tests/test_api_entries.py
+   - Status: targeted tests for the above endpoints passed locally (11 tests).
+   - Next work: implement validation schemas and stronger uniqueness checks per-user if multi-user support is added; consider soft-delete option for habits.
    - Risk/complexity: high
    - Owner/area: backend (API)
 
