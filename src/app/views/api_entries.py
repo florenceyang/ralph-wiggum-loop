@@ -141,3 +141,49 @@ def bulk_entries():  # type: ignore[no-untyped-def]
         return jsonify({'error': 'bulk update failed', 'message': str(exc)}), 500
 
     return jsonify({'updated': results}), 200
+
+
+@api_entries_bp.route('/entries/<entry_id>', methods=['DELETE'])
+def delete_entry(entry_id):  # type: ignore[no-untyped-def]
+    """Delete a single entry by ID."""
+    entry = Entry.query.get(entry_id)
+    if not entry:
+        return jsonify({'error': 'entry not found'}), 404
+
+    try:
+        db.session.delete(entry)
+        db.session.commit()
+    except Exception as exc:  # pragma: no cover - error path
+        db.session.rollback()
+        return jsonify({'error': 'delete failed', 'message': str(exc)}), 500
+
+    return jsonify({'deleted': True}), 200
+
+
+@api_entries_bp.route('/entries/<entry_id>', methods=['PATCH'])
+def patch_entry(entry_id):  # type: ignore[no-untyped-def]
+    """Partial update for an entry (supports done and note)."""
+    data = request.get_json() or {}
+    entry = Entry.query.get(entry_id)
+    if not entry:
+        return jsonify({'error': 'entry not found'}), 404
+
+    if 'done' in data:
+        entry.done = bool(data.get('done'))
+    if 'note' in data:
+        entry.note = data.get('note')
+
+    db.session.commit()
+
+    return (
+        jsonify(
+            {
+                'id': entry.id,
+                'habit_id': entry.habit_id,
+                'date': entry.date.isoformat(),
+                'done': entry.done,
+                'note': entry.note,
+            }
+        ),
+        200,
+    )

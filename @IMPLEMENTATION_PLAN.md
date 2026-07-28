@@ -28,4 +28,20 @@ Immediate actions taken
 Notes
 - Warnings from SQLAlchemy about Query.get() are visible; consider updating to Session.get() in a follow-up.
 
-Status: TODO - frontend implementation (Day 1 wires & Day 2–4 table UI)
+Status: IN_PROGRESS - frontend implementation (Day 1 wires & Day 2–4 table UI)
+
+Recent progress:
+- Added server-side shell for Habit Tracker: /habits route (src/app/views/habits.py) and templates/habits.html. This provides the data-island mount point for the frontend Habit Tracker UI.
+- Registered the new blueprint in src/app/views/__init__.py.
+
+Next steps remain: implement frontend components (HabitTable, HabitCell, CalendarView, Legend, HabitEditor) and client hooks for optimistic updates.
+
+Immediate changes taken (2026-07-28):
+- Added DELETE /api/entries/<entry_id> endpoint to remove single entries.
+- Added PATCH /api/entries/<entry_id> endpoint to support partial updates (done, note).
+- These endpoints were implemented in src/app/views/api_entries.py to align with the specifications and to support client-side removal and partial updates without requiring full entry payloads.
+
+Validation:
+- Ran targeted backend tests covering entries and habits; all targeted tests passed (5 passed, 20 warnings).
+
+Status: IN_PROGRESS - backend API surface completed for entry deletion/patch; frontend implementation remains (Day 1 wires & Day 2–4 table UI)
