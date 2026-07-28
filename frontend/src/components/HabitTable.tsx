@@ -52,9 +52,15 @@ export const HabitTable: React.FC<HabitTableProps> = ({ habits, month, entries =
       <thead>
         <tr>
           <th>Habit</th>
-          {days.map((d) => (
-            <th key={d}>{new Date(d).getDate()}</th>
-          ))}
+          {days.map((d) => {
+            const dt = new Date(d);
+            const label = dt.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' });
+            return (
+              <th key={d} scope="col" aria-label={d} title={label}>
+                {label}
+              </th>
+            );
+          })}
         </tr>
       </thead>
       <tbody>

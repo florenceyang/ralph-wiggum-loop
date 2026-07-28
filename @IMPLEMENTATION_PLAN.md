@@ -33,6 +33,8 @@ Notes
 
 Status: IN_PROGRESS - root redirect implemented; frontend implementation (Day 1 wires & Day 2–4 table UI) ongoing.
 
+Recent change (2026-07-28): HabitTable header updated to include weekday + date labels to meet specs (columns labeled with weekday + date). This improves accessibility and fulfills spec lines 17-18. Frontend unit tests run and all pass after the change.
+
 Test results: Backend habit API tests passed locally (5 passed, 12 warnings). Next immediate task: implement frontend components HabitTable and HabitCell (frontend/src/components) to satisfy core UI acceptance criteria and add unit tests for them.
 
 Recent progress:
