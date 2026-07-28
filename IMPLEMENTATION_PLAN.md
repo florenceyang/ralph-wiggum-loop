@@ -1,6 +1,7 @@
 # Updates
 
 - [x] Backend models & migration implemented (migrations/versions/9b1c2d3e4f5a_create_habits_entries.py)
+- [x] Basic API endpoints implemented (GET/POST for habits and entries) with tests: tests/test_api_habits.py, tests/test_api_entries.py — verified passing
 - Tests added: tests/models/test_habit_entry.py — verified passing
 
 1. Backend: Add Habit & Entry models + DB migration (HIGH)
