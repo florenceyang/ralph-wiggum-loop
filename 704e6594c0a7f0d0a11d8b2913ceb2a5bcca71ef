@@ -1,0 +1,1 @@
+Implement basic Habit and Entry API endpoints and tests. Files added: src/app/views/api_habits.py, src/app/views/api_entries.py. Tests: tests/test_api_habits.py, tests/test_api_entries.py. Updated IMPLEMENTATION_PLAN.md.
