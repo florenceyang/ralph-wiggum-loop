@@ -45,6 +45,7 @@
      - Spec: specs/habit-tracker-specifications.md — "/api/entries/bulk" (line ~46).
      - New endpoint: src/app/views/api_entries.py
      - Tests: tests/test_api_entries_bulk.py
+   - Status: Completed — implemented transactional bulk endpoint using nested transactions; added tests; verified passing (see tests/test_api_entries_bulk.py).
    - Risk/complexity: medium
    - Owner/area: backend (API)
 

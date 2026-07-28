@@ -88,3 +88,56 @@ def create_or_update_entry():  # type: ignore[no-untyped-def]
         ),
         200,
     )
+
+
+@api_entries_bp.route('/entries/bulk', methods=['POST'])
+def bulk_entries():  # type: ignore[no-untyped-def]
+    data = request.get_json() or {}
+    items = data.get('entries')
+    if not items or not isinstance(items, list):
+        return jsonify({'error': 'entries list required'}), 400
+
+    results = []
+    try:
+        # Use a transaction for bulk operations
+        # Use nested transaction to work with Flask-SQLAlchemy's session scoping
+        with db.session.begin_nested():
+            for it in items:
+                habit_id = it.get('habit_id')
+                date_str = it.get('date')
+                done = it.get('done', True)
+                note = it.get('note')
+
+                if not habit_id or not date_str:
+                    raise ValueError('habit_id and date are required for each entry')
+
+                habit = Habit.query.get(habit_id)
+                if not habit:
+                    # Abort early with a 404 for missing habit
+                    return jsonify({'error': 'habit not found', 'habit_id': habit_id}), 404
+
+                try:
+                    d = datetime.strptime(date_str, '%Y-%m-%d').date()
+                except Exception:
+                    return jsonify({'error': 'date must be YYYY-MM-DD', 'date': date_str}), 400
+
+                entry = Entry.query.filter_by(habit_id=habit_id, date=d).first()
+                if entry:
+                    entry.done = bool(done)
+                    entry.note = note
+                else:
+                    entry = Entry(habit_id=habit_id, date=d, done=bool(done), note=note)
+                    db.session.add(entry)
+
+                results.append({
+                    'id': entry.id,
+                    'habit_id': entry.habit_id,
+                    'date': entry.date.isoformat(),
+                    'done': entry.done,
+                    'note': entry.note,
+                })
+    except Exception as exc:  # pragma: no cover - error path
+        # Rollback handled by contextmanager; return error
+        return jsonify({'error': 'bulk update failed', 'message': str(exc)}), 500
+
+    return jsonify({'updated': results}), 200

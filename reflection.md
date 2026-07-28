@@ -8,4 +8,6 @@ doesn't ask clarifying questions, just generates once and wants to move onto nex
 > review agent for specifications takes a while
 > tried to use code-review agent which just compared to current code existing in the repo
 
-generated implementation plan but never put it in the repo (stayed within the agent session)
+generated implementation plan but never put it in the repo (stayed within the agent session) -- needed to manually copy and paste
+
+giving it wrong context by telling it to replace hello world rlly affects quality / waste context since it processed space invaders files when it was just suppsed to remove them
