@@ -15,14 +15,16 @@
    - Owner/area: backend (models, migrations, DB)
    - Notes: follow timestamp/UUID columns and indexes for (habit_id, date) queries; use same db instance in src/app/models/base.py.
 
-2. Backend: Implement REST API endpoints per spec (HIGH)
-   - What: Implement GET/POST/PUT/DELETE /api/habits and GET/POST/DELETE /api/entries and POST /api/entries/bulk.
+2. Backend: Implement REST API endpoints per spec (HIGH) — PARTIALLY COMPLETED
+   - What (initial): Implement GET/POST for /api/habits and GET/POST for /api/entries (basic create/list/update semantics). Remaining: PUT/DELETE for habits, DELETE for entries, and POST /api/entries/bulk.
    - Why: Client depends on these to persist/retrieve habits and entries.
-   - Files / refs:
-     - Spec: specs/habit-tracker-specifications.md — "API (REST)" (lines ~38–48 and ~44–47).
-     - New files: src/app/views/api_habits.py, src/app/views/api_entries.py (or package src/app/api).
-     - Register blueprints: update src/app/views/**init**.py to register API blueprints.
-     - Tests: tests/test_api_habits.py, tests/test_api_entries.py (integration tests using tests/conftest.py fixtures).
+   - Files / refs (added):
+     - src/app/views/api_habits.py (GET /api/habits, POST /api/habits)
+     - src/app/views/api_entries.py (GET /api/entries?month=YYYY-MM, POST /api/entries)
+     - Updated: src/app/views/__init__.py to register new blueprints
+     - Tests added: tests/test_api_habits.py, tests/test_api_entries.py
+   - Status: targeted tests for the above endpoints passed (2 tests) in CI-local run.
+   - Next work: add PUT/DELETE endpoints, implement /api/entries/bulk with transactional behavior, and add validation schemas and stronger uniqueness checks per-user.
    - Risk/complexity: high
    - Owner/area: backend (API)
 
