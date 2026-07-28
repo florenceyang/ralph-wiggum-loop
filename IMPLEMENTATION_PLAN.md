@@ -55,7 +55,7 @@
    - What: Implement components listed in spec: HabitTable, HabitCell, CalendarView, Legend, HabitEditor, and client hook useHabits.ts (optimistic updates + monthly caching).
    - Files / refs:
      - Spec: specs/habit-tracker-specifications.md — "Files & components" (lines ~105–113) and multiple UI sections (table/calendar/legend).
-     - New files: frontend/src/components/HabitTable.tsx, HabitCell.tsx, CalendarView.tsx, Legend.tsx, HabitEditor.tsx; frontend/src/hooks/useHabits.ts.
+     - New files: frontend/src/components/HabitTable.tsx, HabitCell.tsx, CalendarView.tsx, Legend.tsx, HabitEditor.tsx; frontend/src/hooks/useHabits.ts. (2026-07-28: HabitEditor implemented with unit tests)
      - Tests: frontend unit tests for each component (frontend/tests/components/\*).
    - Risk/complexity: high
    - Owner/area: frontend (UI, hooks)
