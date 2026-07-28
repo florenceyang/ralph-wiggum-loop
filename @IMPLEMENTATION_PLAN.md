@@ -1,0 +1,31 @@
+IMPLEMENTATION PLAN
+
+Date: 2026-07-28
+
+Summary
+- Created because repository lacked @IMPLEMENTATION_PLAN.md referenced by workflow.
+- Studied specs/habit-tracker-specifications.md and source in src/.
+- Ran backend unit tests: all tests passed (11 passed, 22 warnings).
+
+Findings
+- Backend API endpoints for /api/habits and /api/entries are implemented and covered by tests.
+- Models Habit and Entry exist with expected fields and indexes.
+- No IMPLEMENTATION_PLAN.md previously; added to record state and next work.
+
+Next highest-priority work
+1. Frontend: implement HabitTable, HabitCell, CalendarView, Legend, HabitEditor components (frontend/src/components). These are required to satisfy the UI acceptance criteria in specs.
+   - Create minimal wireframes and components with keyboard accessibility and ARIA labels.
+   - Implement client caching and optimistic updates in frontend/src/hooks/useHabits.ts.
+   - Use existing backend API endpoints for persistence and bulk entries.
+2. Migrations: ensure migrations exist to create habits/entries tables. If missing, add migration per backend stack.
+3. Performance: add virtualization for table rows and bulk API usage for range updates.
+4. Tests: add unit tests for frontend components plus integration tests ensuring table↔calendar sync.
+
+Immediate actions taken
+- Added this IMPLEMENTATION_PLAN.md to repo and committed the change.
+- Ran backend tests to validate server behavior.
+
+Notes
+- Warnings from SQLAlchemy about Query.get() are visible; consider updating to Session.get() in a follow-up.
+
+Status: TODO - frontend implementation (Day 1 wires & Day 2–4 table UI)
