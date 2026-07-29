@@ -43,4 +43,26 @@ describe('HabitEditor', () => {
     const alert = await screen.findByTestId('habit-editor-error');
     expect(alert).toHaveTextContent('Name required');
   });
+
+  it('edit mode pre-fills fields and calls onSave with the patch instead of POSTing', async () => {
+    const habit = { id: 'h1', name: 'Meditate', icon: 'heart', color: '#ff0000' };
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const onCancel = vi.fn();
+    render(<HabitEditor habit={habit} onSave={onSave} onCancel={onCancel} />);
+
+    const nameInput = screen.getByTestId('habit-editor-name') as HTMLInputElement;
+    expect(nameInput.value).toBe('Meditate');
+    expect(screen.getByTestId('habit-editor-submit')).toHaveTextContent('Save');
+
+    fireEvent.change(nameInput, { target: { value: 'Meditate daily' } });
+    fireEvent.click(screen.getByTestId('habit-editor-submit'));
+
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith('h1', { name: 'Meditate daily', icon: 'heart', color: '#ff0000' }),
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('habit-editor-cancel'));
+    expect(onCancel).toHaveBeenCalled();
+  });
 });

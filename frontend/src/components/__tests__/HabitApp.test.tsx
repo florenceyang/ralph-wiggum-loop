@@ -27,6 +27,10 @@ describe('HabitApp (integration)', () => {
       if (url.endsWith('/api/entries') && init?.method === 'POST') {
         return Promise.resolve({ ok: true, json: () => Promise.resolve({ id: 'e2', habit_id: 'h1', date: '2026-07-10', done: true }) });
       }
+      if (url.startsWith('/api/habits/') && init?.method === 'PUT') {
+        const patch = JSON.parse(init.body);
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ ...HABITS.find((h) => url.endsWith(h.id)), ...patch }) });
+      }
       return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
     });
   });
@@ -72,7 +76,7 @@ describe('HabitApp (integration)', () => {
 
     await waitFor(() => {
       const col = screen.getByTestId(`habit-table-col-${today}`);
-      expect(col.getAttribute('style')).toContain('background');
+      expect(col.className).toContain('bg-blue-50');
     });
   });
 
@@ -129,5 +133,28 @@ describe('HabitApp (integration)', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
 
     await waitFor(() => expect(endCell).toHaveAttribute('aria-pressed', 'false'));
+  });
+
+  it('opens the full edit form for a habit via its row Edit button and saves via PUT', async () => {
+    render(<HabitApp />);
+    await waitFor(() => expect(screen.getByTestId('habit-name-h1')).toBeTruthy());
+
+    fireEvent.click(screen.getByTestId('habit-edit-h1'));
+
+    const nameInput = screen.getByTestId('habit-editor-name') as HTMLInputElement;
+    expect(nameInput.value).toBe('Meditation');
+    expect(screen.getByTestId('habit-editor-submit')).toHaveTextContent('Save');
+
+    fireEvent.change(nameInput, { target: { value: 'Meditate more' } });
+    fireEvent.click(screen.getByTestId('habit-editor-submit'));
+
+    await waitFor(() =>
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/habits/h1',
+        expect.objectContaining({ method: 'PUT' }),
+      ),
+    );
+    // Saving closes the edit form and reverts to the create form.
+    await waitFor(() => expect(screen.getByTestId('habit-editor-submit')).toHaveTextContent('Add'));
   });
 });

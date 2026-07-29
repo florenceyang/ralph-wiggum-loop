@@ -41,6 +41,10 @@ export const HabitApp: React.FC = () => {
   const [month, setMonth] = useState<string>(currentMonth());
   const [activeIds, setActiveIds] = useState<Set<string> | null>(null); // null = show all
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
+  // Habit currently open in the editor's edit mode (name/icon/color/order).
+  // Double-click-to-rename still works as a quick shortcut, but this is the
+  // full edit path — set via the row's "Edit" icon button.
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const undoStack = useRef<Action[]>([]);
   const redoStack = useRef<Action[]>([]);
 
@@ -141,11 +145,36 @@ export const HabitApp: React.FC = () => {
     }
   }, []);
 
+  // Clicking a habit marker inside a calendar day cell jumps back to that
+  // habit's row in the table (and highlights the day column), instead of
+  // the marker being a non-interactive glyph.
+  const handleMarkerClick = useCallback((habitId: string, date: string) => {
+    setHighlightDate(date);
+    const row = document.querySelector(`[data-testid="habit-row-${habitId}"]`);
+    if (row && typeof (row as HTMLElement).scrollIntoView === 'function') {
+      (row as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    const cell = document.querySelector(`[data-testid="habit-cell-${date}"]`);
+    if (cell && typeof (cell as HTMLElement).focus === 'function') {
+      (cell as HTMLElement).focus();
+    }
+  }, []);
+
   const handleRename = useCallback(
     (habitId: string, name: string) => {
       updateHabit(habitId, { name }).catch(() => {
         /* rollback handled inside useHabits; surface nothing further here */
       });
+    },
+    [updateHabit],
+  );
+
+  const handleEditSave = useCallback(
+    async (id: string, patch: { name: string; icon: string; color: string }) => {
+      await updateHabit(id, patch).catch(() => {
+        /* rollback handled inside useHabits */
+      });
+      setEditingHabit(null);
     },
     [updateHabit],
   );
@@ -198,7 +227,12 @@ export const HabitApp: React.FC = () => {
           </button>
         </div>
 
-        <HabitEditor onCreate={(created: Habit) => addHabit(created)} />
+        <HabitEditor
+          habit={editingHabit}
+          onCreate={(created: Habit) => addHabit(created)}
+          onSave={handleEditSave}
+          onCancel={() => setEditingHabit(null)}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -210,13 +244,21 @@ export const HabitApp: React.FC = () => {
             onToggle={handleToggle}
             onRangeToggle={handleRangeToggle}
             onRename={handleRename}
+            onEdit={setEditingHabit}
             onDelete={handleDelete}
             highlightDate={highlightDate}
           />
         </div>
 
         <div className="flex flex-col gap-6">
-          <CalendarView month={month} habits={habits} entries={entries} activeIds={activeIds} onDayClick={handleDayClick} />
+          <CalendarView
+            month={month}
+            habits={habits}
+            entries={entries}
+            activeIds={activeIds}
+            onDayClick={handleDayClick}
+            onMarkerClick={handleMarkerClick}
+          />
           <Legend habits={habits} activeIds={activeIds} onToggle={handleLegendToggle} />
         </div>
       </div>

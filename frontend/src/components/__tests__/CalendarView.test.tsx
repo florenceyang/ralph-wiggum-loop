@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import CalendarView from '../CalendarView';
 
 const habits = [
@@ -37,5 +37,32 @@ describe('CalendarView', () => {
 
     // day with single entry shows that icon
     expect(screen.getByTestId('calendar-icon-2026-07-02-h1')).toBeTruthy();
+  });
+
+  it('starts the grid on day 1 aligned under its real weekday column', () => {
+    render(<CalendarView month="2026-07" habits={habits as any} entries={entries as any} />);
+    // 2026-07-01 is a Wednesday; the grid should render 3 leading blank
+    // cells (Sun/Mon/Tue) before day 1, not start day 1 in column 0.
+    expect(screen.getByTestId('calendar-day-2026-07-01')).toBeTruthy();
+    expect(screen.queryByTestId('calendar-day-2026-06-30')).toBeNull();
+  });
+
+  it('calls onMarkerClick (not just onDayClick) when a habit marker is clicked', () => {
+    const onDayClick = vi.fn();
+    const onMarkerClick = vi.fn();
+    render(
+      <CalendarView
+        month="2026-07"
+        habits={habits as any}
+        entries={entries as any}
+        onDayClick={onDayClick}
+        onMarkerClick={onMarkerClick}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('calendar-icon-2026-07-01-h1'));
+    expect(onMarkerClick).toHaveBeenCalledWith('h1', '2026-07-01');
+    // the marker click should not also bubble into the day-cell click.
+    expect(onDayClick).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,7 @@
 import React from 'react';
 
+import HabitIcon from './HabitIcon';
+
 export type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Home' | 'End';
 
 export type HabitCellProps = {
@@ -97,17 +99,14 @@ export const HabitCell = React.forwardRef<HTMLButtonElement, HabitCellProps>(fun
     }
   };
 
+  // Layout/interaction styling is Tailwind; only the per-habit `color` and
+  // its derived border/background/text values stay inline since they're
+  // arbitrary runtime values Tailwind's static class scanner can't see.
   const style: React.CSSProperties = {
     width: size,
     height: size,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 4,
-    border: previewDone === undefined ? '1px solid #e5e7eb' : `2px dashed ${previewDone ? color : '#9ca3af'}`,
-    background: marked ? color : previewDone ? `${color}33` : 'transparent',
-    color: marked ? '#fff' : '#374151',
-    cursor: 'pointer',
+    borderColor: previewDone === undefined ? undefined : previewDone ? color : '#9ca3af',
+    background: marked ? color : previewDone ? `${color}33` : undefined,
   };
 
   return (
@@ -123,10 +122,12 @@ export const HabitCell = React.forwardRef<HTMLButtonElement, HabitCellProps>(fun
       onFocus={() => onFocusCell && onFocusCell(date)}
       tabIndex={tabIndex}
       style={style}
+      className={`inline-flex items-center justify-center rounded transition-colors duration-100 cursor-pointer bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-1 ${
+        previewDone === undefined ? 'border border-slate-200 hover:border-slate-300' : 'border-2 border-dashed'
+      }`}
       data-testid={`habit-cell-${date}`}
     >
-      {/* simple glyph fallback to first char of icon */}
-      {icon ? icon.charAt(0).toUpperCase() : '●'}
+      <HabitIcon icon={icon} color={marked ? '#fff' : color} size={Math.round(size * 0.55)} />
     </button>
   );
 });

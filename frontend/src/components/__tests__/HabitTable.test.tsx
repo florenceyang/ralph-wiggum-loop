@@ -165,3 +165,20 @@ describe('HabitTable', () => {
     );
   });
 });
+
+describe('HabitTable — edit/delete affordances', () => {
+  it('invokes onEdit with the full habit when the edit icon button is clicked', () => {
+    const habits = [{ id: 'h1', name: 'Meditation', icon: 'heart', color: '#ff0000' }];
+    const onEdit = vi.fn();
+    render(<HabitTable habits={habits} month="2026-07" entries={[]} onEdit={onEdit} />);
+
+    fireEvent.click(screen.getByTestId('habit-edit-h1'));
+    expect(onEdit).toHaveBeenCalledWith(habits[0]);
+  });
+
+  it('tags each row with a stable data-testid for external row-jumping', () => {
+    const habits = [{ id: 'h1', name: 'Meditation', icon: 'heart', color: '#ff0000' }];
+    render(<HabitTable habits={habits} month="2026-07" entries={[]} />);
+    expect(screen.getByTestId('habit-row-h1')).toBeInTheDocument();
+  });
+});

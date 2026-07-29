@@ -58,11 +58,14 @@ test.describe('Habit Tracker Page', () => {
     await expect(firstCell).toHaveAttribute('aria-pressed', 'true');
 
     // The same habit's marker should now appear on the corresponding
-    // calendar day with the same icon.
+    // calendar day, rendered as a real SVG shape+color pair (not a
+    // first-letter text glyph).
     if (date) {
       const calendarDay = page.getByTestId(`calendar-day-${date}`);
       await expect(calendarDay).toBeVisible();
-      await expect(calendarDay.locator(`span[title="${uniqueName}"]`)).toContainText('S');
+      const marker = calendarDay.locator(`button[title="${uniqueName}"]`);
+      await expect(marker).toBeVisible();
+      await expect(marker.locator('svg')).toBeVisible();
     }
   });
 
