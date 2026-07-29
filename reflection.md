@@ -20,3 +20,6 @@ website didn't work on first go - had server errors and missing UI
 
 V2 - fix current site (update specs) + remove space invaders game
 V3 - add to-do list
+
+stronger models produce much more concise, better-performing results
+gemini asked follow-up questions

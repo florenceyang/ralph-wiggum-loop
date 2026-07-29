@@ -11,18 +11,21 @@ Create a specification for the habit-tracking website feature that will replace 
 update the specification to use the same icons for one habit across the days. different habits should have different icons / colors to differentiate themselves on the calendar. once this is updated in the specifications, generate the specifications.md file with all this
 
 # REVIEW SPEC
+
 /review @specs/habit-tracker-specifications.md
 
 # PLAN
+
 ./loop.sh -m plan -n 2
 
 # CODE
+
 ./loop.sh
 
-
 ============== ROUND 2 =========================
+all claude-sonnet-5
 
-# feature spec
+# SPEC
 
 rerun /plan with higher model - claude-sonnet-5
 /plan This repo currently attempts to implement a habit-tracking website. however, it does not work and most of the functionality is broken. Either completely replace or fix the current implementaiton. Here are the requirements:
@@ -32,3 +35,33 @@ Create a specification for the habit-tracking website feature that will replace 
 ┃ table can be marked with a colored shape to indicate if the habit was done on that specific day
 ┃ (2) Calendar that maps each of the marked habits in the table to the corresponding day in the calendar
 ┃ (example: red heart for habit 1, yellow diamond for habit 2)
+
+# IMPLEMENTATION_PLAN
+
+./loop.sh -m plan -n 2
+
+# CODE
+
+./loop.sh
+
+============== ROUND 3 =========================
+
+# SPEC
+
+rerun /plan with different model - gemini-3.1-pro
+/plan Create a specification for v3 of the habit-tracking website. It should:
+
+1. Update the UI to be modern, simple, and clean.
+2. Fix UI discrepancies. Currently the table columns are hard to read with the congested layout of day numbers and day names. There's also small issues with the day numbers (some months only have 30 days vs 31 days - this is not properly reflected in the table nor the calendar). The removal button of the habits in the table is also squished - update it so it's a more intuitive, clean UI.
+3. Address the remaining open action items and follow-ups from the implementation_plan.md currently in the repo.
+4. Create a new to-do list section on the site. The to-do list items can easily be re-ordered by drag and drop for priority. Multiple groups of to-do lists can also be created to cleanly separate different categories of to-do list items. Maybe denote different categories via some sort of color-coding / UI differentiation.
+
+model=sonnet-5
+
+# IMPLEMENTATION_PLAN
+
+./loop.sh -m plan -n 2
+
+# CODE
+
+./loop.sh
