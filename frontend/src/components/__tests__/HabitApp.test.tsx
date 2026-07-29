@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, beforeEach, afterEach, describe, it, expect } from 'vitest';
 import { HabitApp } from '../HabitApp';
+import { formatLocalDate } from '../../lib/date';
 
 const HABITS = [
   { id: 'h1', name: 'Meditation', icon: 'heart', color: '#ff0000' },
@@ -20,7 +21,7 @@ describe('HabitApp (integration)', () => {
       if (url.includes('/api/entries?month=')) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([{ id: 'e1', habit_id: 'h1', date: new Date().toISOString().slice(0, 10), done: true }]),
+          json: () => Promise.resolve([{ id: 'e1', habit_id: 'h1', date: formatLocalDate(new Date()), done: true }]),
         });
       }
       if (url.endsWith('/api/entries') && init?.method === 'POST') {
@@ -65,7 +66,7 @@ describe('HabitApp (integration)', () => {
     render(<HabitApp />);
     await waitFor(() => expect(screen.getByTestId('habit-name-h1')).toBeTruthy());
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatLocalDate(new Date());
     const dayButton = screen.getByTestId(`calendar-day-${today}`);
     fireEvent.click(dayButton);
 

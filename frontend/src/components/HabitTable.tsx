@@ -1,5 +1,6 @@
 import React from 'react';
 import HabitCell, { ArrowKey } from './HabitCell';
+import { daysInMonth } from '../lib/date';
 
 export type Habit = {
   id: string;
@@ -25,17 +26,6 @@ export type HabitTableProps = {
   onDelete?: (habitId: string) => void;
   highlightDate?: string | null;
 };
-
-function daysInMonth(monthStr: string): string[] {
-  const [y, m] = monthStr.split('-').map((s) => parseInt(s, 10));
-  const days = new Date(y, m, 0).getDate();
-  const arr: string[] = [];
-  for (let d = 1; d <= days; d++) {
-    const iso = new Date(y, m - 1, d).toISOString().slice(0, 10);
-    arr.push(iso);
-  }
-  return arr;
-}
 
 export const HabitTable: React.FC<HabitTableProps> = ({
   habits,

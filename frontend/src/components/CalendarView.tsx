@@ -1,6 +1,7 @@
 import React from 'react';
 
 import type { Habit as HabitType, Entry as EntryType } from './HabitTable';
+import { daysInMonth } from '../lib/date';
 
 export type CalendarViewProps = {
   month: string; // YYYY-MM
@@ -9,17 +10,6 @@ export type CalendarViewProps = {
   activeIds?: Set<string> | null; // null/undefined = all active
   onDayClick?: (date: string) => void;
 };
-
-function daysInMonth(monthStr: string): string[] {
-  const [y, m] = monthStr.split('-').map((s) => parseInt(s, 10));
-  const days = new Date(y, m, 0).getDate();
-  const arr: string[] = [];
-  for (let d = 1; d <= days; d++) {
-    const iso = new Date(y, m - 1, d).toISOString().slice(0, 10);
-    arr.push(iso);
-  }
-  return arr;
-}
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ month, habits, entries = [], activeIds, onDayClick }) => {
   const days = daysInMonth(month);
