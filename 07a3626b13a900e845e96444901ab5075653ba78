@@ -1,0 +1,1 @@
+Session note: implemented IMPLEMENTATION_PLAN.md priority item 1 (v3 UI modernization) and most of item 2 (edit mode, sticky table, true calendar grid, focusable markers). Verified daysInMonth already started at day 1 (no fix needed, just added regression test). Left habit row drag-to-reorder and v1 secondary cell actions (notes/clear/repeat/context-menu) as remaining open items.
