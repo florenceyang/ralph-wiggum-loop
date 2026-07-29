@@ -1,0 +1,34 @@
+## AI Agent Reasoning
+
+### Context
+IMPLEMENTATION_PLAN.md item 7 (HIGH) flagged that arrow-key navigation
+across the habit table grid was unimplemented, and that keyboard focus
+movement needed explicit test coverage. While implementing, also found
+a real bug: HabitCell's aria-label used the icon id instead of the
+habit name, contradicting the spec's
+'Habit: <name> — <date> — marked/unmarked' format.
+
+### Decisions Made
+- Roving tabindex pattern (one tabIndex=0 cell, rest -1) chosen over
+  giving every cell tabIndex=0: matches the standard ARIA grid keyboard
+  pattern and keeps Tab-key traversal of the page to one stop per grid
+  instead of one stop per cell (habits x days could be 30+ cells/row).
+- Kept native <table>/<td> semantics rather than switching to
+  role=grid/row/gridcell: the existing table already conveys row/column
+  relationships via built-in table semantics, and screen readers handle
+  a real <table> combined with roving tabindex + aria-pressed buttons
+  correctly, so no role rewrite was needed for this increment.
+- Single source of focus truth (activeCell state + cellRefs matrix) in
+  HabitTable rather than local state per HabitCell, so Up/Down/Left/
+  Right can move across sibling cells that don't otherwise share state.
+- onFocusCell updates activeCell whenever any cell gains focus (not
+  just via arrow keys) so plain Tab navigation also keeps the roving
+  tabindex correct.
+
+### Trade-offs
+- Did not implement Shift+Arrow range selection or multi-cell
+  bulk-marking here — that is explicitly item 8 in the plan (bulk
+  marking / undo-redo) and is a separate, larger increment.
+- Used fireEvent.keyDown + explicit act() wrapping in the vitest test
+  instead of @testing-library/user-event, since user-event isn't a
+  project dependency and adding it was out of scope for this fix.
