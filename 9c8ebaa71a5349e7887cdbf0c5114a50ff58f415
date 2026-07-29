@@ -1,0 +1,45 @@
+## AI Agent Reasoning
+
+### Context
+IMPLEMENTATION_PLAN.md's top priority item was the net-new v3 To-Do
+list feature (specs/habit-tracker-v3-specifications.md §3): TodoGroup
+categories containing draggable TodoItems, backed by a REST API and
+persisted reorder state.
+
+### Decisions Made
+- Backend API shape: GET /api/todos returns groups with items already
+  nested and sorted (rather than flat groups+items arrays) so the
+  frontend can render columns directly without client-side joining.
+- PUT /api/todos/reorder accepts a list of {id, order, group_id?}
+  entries in one request (mirrors the existing POST /api/entries/bulk
+  pattern already used for habit entries) so a single drag-and-drop
+  gesture that moves an item across groups persists atomically instead
+  of via two round-trips (a move PUT + a separate reorder PUT).
+- Migration down_revision: discovered a pre-existing bug where
+  f1a2b3c4d5e6 (drop_hello_table) and 9b1c2d3e4f5a (create_habits_entries)
+  both claim 9b1c2d3e4f5a as their parent, making 9b1c2d3e4f5a look like
+  a safe base for a new migration but actually producing two Alembic
+  heads. Chained the new todo_groups/todo_items migration onto
+  f1a2b3c4d5e6 (the true prior head) instead, and documented this
+  gotcha in IMPLEMENTATION_PLAN.md so future migrations don't repeat it.
+- Delegated the frontend half (useTodos hook, TodoBoard/TodoGroup/TodoItem
+  dnd-kit components, unit tests) to a background subagent running in
+  parallel with backend implementation, since the two halves only share
+  a already-fixed API contract and have no code-level dependency during
+  development.
+- Fixed e2e/habits.spec.ts's page.getByLabel('Color') calls (ambiguous
+  substring match once TodoGroup color pickers were added) by switching
+  to the existing data-testid="habit-editor-color", rather than renaming
+  the new component's aria-labels, since the more specific/robust
+  locator was already available and is the safer long-term choice.
+
+### Trade-offs
+- TodoGroup carries an `order` column even though the spec text only
+  lists id/name/color; added it for consistency with Habit.order and
+  because column reordering is an obvious next feature, but it is
+  currently unused by the frontend group list ordering UI beyond the
+  initial creation-order default.
+
+### References
+- Plan: IMPLEMENTATION_PLAN.md item 1 (now implemented, reprioritized
+  list moved items 2-4 up to 1-3).
