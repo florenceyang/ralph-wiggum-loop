@@ -9,7 +9,7 @@ We add a new migration (rather than deleting the create migration) so that
 full migration chain creates then drops the table, leaving a clean schema.
 
 Revision ID: f1a2b3c4d5e6
-Revises: e31396db40b1
+Revises: 9b1c2d3e4f5a
 Create Date: 2026-05-29 15:40:00.000000
 
 """
@@ -19,7 +19,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'f1a2b3c4d5e6'
-down_revision = 'e31396db40b1'
+down_revision = '9b1c2d3e4f5a'
 branch_labels = None
 depends_on = None
 

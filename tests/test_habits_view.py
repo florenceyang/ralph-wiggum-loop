@@ -1,10 +1,9 @@
-"""Tests for the Space Invaders game view.
+"""Tests for the Habits page routing.
 
-The game is entirely client-side, so the backend's only responsibility is
-to serve the HTML shell containing the React Island mount point. These tests
-verify that contract: the homepage returns 200, advertises the correct
-title, and includes the ``data-island="game"`` hook that ``main.ts`` uses
-to mount the canvas game.
+The habit tracker is rendered client-side via a React Island; the backend's
+only responsibility is to serve the HTML shell containing the island mount
+point and to redirect the root path to /habits (replacing the former
+Space Invaders homepage).
 """
 from __future__ import annotations
 
@@ -13,13 +12,8 @@ from typing import Any
 from flask.testing import FlaskClient
 
 
-class TestGamePage:
-    """Tests for root routing behavior after replacing the game page.
-
-    The application now redirects the root path to /habits per the
-    habit-tracker specification. Also verify that the /habits page renders
-    the habit-tracker shell.
-    """
+class TestHabitsPage:
+    """Tests for root routing behavior and the /habits page shell."""
 
     def test_root_redirects_to_habits(self, client: FlaskClient[Any]) -> None:
         """GET / should redirect to /habits."""
@@ -34,6 +28,7 @@ class TestGamePage:
         assert response.status_code == 200
         assert b'Habit Tracker' in response.data
         assert b'<title>Habits</title>' in response.data
+        assert b'data-island="habits"' in response.data
 
 
 class TestErrorHandlers:

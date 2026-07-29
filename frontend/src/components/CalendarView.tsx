@@ -6,6 +6,7 @@ export type CalendarViewProps = {
   month: string; // YYYY-MM
   habits: HabitType[];
   entries?: EntryType[];
+  activeIds?: Set<string> | null; // null/undefined = all active
   onDayClick?: (date: string) => void;
 };
 
@@ -20,7 +21,7 @@ function daysInMonth(monthStr: string): string[] {
   return arr;
 }
 
-export const CalendarView: React.FC<CalendarViewProps> = ({ month, habits, entries = [], onDayClick }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ month, habits, entries = [], activeIds, onDayClick }) => {
   const days = daysInMonth(month);
 
   const byDate = React.useMemo(() => {
@@ -28,12 +29,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ month, habits, entri
     for (const d of days) m[d] = { habitIds: [], entries: [] };
     for (const e of entries) {
       if (!e || !e.date) continue;
+      if (activeIds && !activeIds.has(e.habit_id)) continue;
       if (!m[e.date]) m[e.date] = { habitIds: [], entries: [] };
       if (e.done) m[e.date].habitIds.push(e.habit_id);
       m[e.date].entries.push(e);
     }
     return m;
-  }, [entries, days]);
+  }, [entries, days, activeIds]);
 
   const habitById = React.useMemo(() => {
     const map: Record<string, HabitType> = {};

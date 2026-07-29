@@ -2,9 +2,9 @@
 
 # SPEC
 
-Create a specification for a habit-tracking website feature that will replace the hello world in the repo. This feature conists of two main components:
+Create a specification for the habit-tracking website feature that will replace the space invaders game in the repo. This feature conists of two main components:
 ┃ (1) Editable, scrollable table (columns: days of the month, rows: habit). Each of the squares in this
-┃ table can be marked with a colored shape to indicate if the habit was done on that specific day
+┃ table can be marked with a colored shape to indicate if the habit was done on that specific day.use the same icons for one habit across the days. different habits should have different icons / colors to differentiate themselves on the calendar.
 ┃ (2) Calendar that maps each of the marked habits in the table to the corresponding day in the calendar
 ┃ (example: red heart for habit 1, yellow diamond for habit 2)
 
@@ -18,3 +18,17 @@ update the specification to use the same icons for one habit across the days. di
 
 # CODE
 ./loop.sh
+
+
+============== ROUND 2 =========================
+
+# feature spec
+
+rerun /plan with higher model - claude-sonnet-5
+/plan This repo currently attempts to implement a habit-tracking website. however, it does not work and most of the functionality is broken. Either completely replace or fix the current implementaiton. Here are the requirements:
+
+Create a specification for the habit-tracking website feature that will replace the space invaders game in the repo. This feature conists of two main components:
+┃ (1) Editable, scrollable table (columns: days of the month, rows: habit). Each of the squares in this
+┃ table can be marked with a colored shape to indicate if the habit was done on that specific day
+┃ (2) Calendar that maps each of the marked habits in the table to the corresponding day in the calendar
+┃ (example: red heart for habit 1, yellow diamond for habit 2)

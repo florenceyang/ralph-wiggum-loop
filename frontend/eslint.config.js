@@ -47,5 +47,15 @@ export default [
   },
   {
     ignores: ['dist/', 'node_modules/'],
-  }
+  },
+  {
+    // Test files run under Vitest/Node, where `global` refers to the Node.js
+    // global object (used to stub `global.fetch` in unit tests).
+    files: ['**/*.test.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
 ]

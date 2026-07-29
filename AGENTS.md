@@ -42,6 +42,7 @@ IMPORTANT ALWAYS RUN these after implementing to get immediate feedback:
 - **Frontend**: Vite dev server on :5173, React Islands pattern with `data-island` attributes in templates
 - **Database**: PostgreSQL, connection via `DATABASE_URL` env var (set by `script/setup`)
 - **Dev environment**: `.env` created by `script/setup`, contains all runtime config
+- **Migrations troubleshooting**: `flask --app src.app db heads` should show one head; use `flask --app src.app db upgrade` to verify/apply migrations directly if `script/setup` fails
 
 ### Codebase Patterns
 

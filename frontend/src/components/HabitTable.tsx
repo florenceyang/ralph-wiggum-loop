@@ -21,11 +21,13 @@ export type HabitTableProps = {
   month: string; // YYYY-MM
   entries?: Entry[];
   onToggle?: (habitId: string, date: string) => void;
+  onRename?: (habitId: string, name: string) => void;
+  onDelete?: (habitId: string) => void;
+  highlightDate?: string | null;
 };
 
 function daysInMonth(monthStr: string): string[] {
   const [y, m] = monthStr.split('-').map((s) => parseInt(s, 10));
-  const date = new Date(y, m - 1, 1);
   const days = new Date(y, m, 0).getDate();
   const arr: string[] = [];
   for (let d = 1; d <= days; d++) {
@@ -35,8 +37,31 @@ function daysInMonth(monthStr: string): string[] {
   return arr;
 }
 
-export const HabitTable: React.FC<HabitTableProps> = ({ habits, month, entries = [], onToggle }) => {
+export const HabitTable: React.FC<HabitTableProps> = ({
+  habits,
+  month,
+  entries = [],
+  onToggle,
+  onRename,
+  onDelete,
+  highlightDate,
+}) => {
   const days = daysInMonth(month);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [draftName, setDraftName] = React.useState('');
+
+  const startEditing = (h: Habit) => {
+    if (!onRename) return;
+    setEditingId(h.id);
+    setDraftName(h.name);
+  };
+
+  const commitEditing = () => {
+    if (editingId && onRename && draftName.trim()) {
+      onRename(editingId, draftName.trim());
+    }
+    setEditingId(null);
+  };
 
   // Build a quick lookup for marked entries (only those with done=true)
   const entriesSet = React.useMemo(() => {
@@ -55,8 +80,16 @@ export const HabitTable: React.FC<HabitTableProps> = ({ habits, month, entries =
           {days.map((d) => {
             const dt = new Date(d);
             const label = dt.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' });
+            const highlighted = highlightDate === d;
             return (
-              <th key={d} scope="col" aria-label={d} title={label}>
+              <th
+                key={d}
+                scope="col"
+                aria-label={d}
+                title={label}
+                data-testid={`habit-table-col-${d}`}
+                style={highlighted ? { background: '#eff6ff' } : undefined}
+              >
                 {label}
               </th>
             );
@@ -66,11 +99,42 @@ export const HabitTable: React.FC<HabitTableProps> = ({ habits, month, entries =
       <tbody>
         {habits.map((h) => (
           <tr key={h.id}>
-            <td>{h.name}</td>
+            <td>
+              {editingId === h.id ? (
+                <input
+                  autoFocus
+                  aria-label={`Rename ${h.name}`}
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
+                  onBlur={commitEditing}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitEditing();
+                    if (e.key === 'Escape') setEditingId(null);
+                  }}
+                  data-testid={`habit-rename-input-${h.id}`}
+                />
+              ) : (
+                <span onDoubleClick={() => startEditing(h)} data-testid={`habit-name-${h.id}`}>
+                  {h.name}
+                </span>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  aria-label={`Delete ${h.name}`}
+                  onClick={() => onDelete(h.id)}
+                  data-testid={`habit-delete-${h.id}`}
+                  style={{ marginLeft: 6, fontSize: 11 }}
+                >
+                  ✕
+                </button>
+              )}
+            </td>
             {days.map((d) => {
               const marked = entriesSet.has(`${h.id}|${d}`);
+              const highlighted = highlightDate === d;
               return (
-                <td key={d} style={{ padding: 4 }}>
+                <td key={d} style={{ padding: 4, background: highlighted ? '#eff6ff' : undefined }}>
                   <HabitCell
                     date={d}
                     marked={marked}

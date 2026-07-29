@@ -12,12 +12,10 @@ def register_blueprints(app: Flask) -> None:
     Args:
         app: Flask application instance
     """
-    from .game import game_bp
     from .habits import habits_bp
     from .api_habits import api_habits_bp
     from .api_entries import api_entries_bp
 
-    app.register_blueprint(game_bp)
     app.register_blueprint(habits_bp)
     app.register_blueprint(api_habits_bp)
     app.register_blueprint(api_entries_bp)

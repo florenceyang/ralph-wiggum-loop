@@ -15,3 +15,8 @@ giving it wrong context by telling it to replace hello world rlly affects qualit
 hallucinated within the loop and created another implementation_plan denoted with @IMPLEMENTATION_PLAN.md instead of IMPLEMENTATION_PLAN.md.
 could not do anything to interfere with loop unless wanted to just stop it and let it continue after based on current state of implementaiton plan (however this may be missing things since files split off)
 let it run to see what final state we are working with (as Rust reading mentioned - update system after, don't directly update the incorrect code changes)
+build loop run for 1 hr
+website didn't work on first go - had server errors and missing UI
+
+V2 - fix current site (update specs) + remove space invaders game
+V3 - add to-do list

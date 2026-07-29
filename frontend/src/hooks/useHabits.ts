@@ -69,6 +69,74 @@ export function useHabits() {
     await ensureMonthLoaded(month);
   }, [ensureMonthLoaded]);
 
+  // Add a habit that was already created server-side (e.g. via HabitEditor's
+  // own POST) to local state, so the table/calendar/legend pick it up
+  // without a full reload.
+  const addHabit = useCallback((habit: Habit) => {
+    setHabits((prev) => [...prev, habit]);
+  }, []);
+
+  // Rename/update a habit's fields (name/icon/color/order). Optimistic with
+  // rollback on failure.
+  const updateHabit = useCallback(async (id: string, patch: Partial<Pick<Habit, 'name' | 'icon' | 'color' | 'order'>>) => {
+    let previous: Habit | undefined;
+    setHabits((prev) =>
+      prev.map((h) => {
+        if (h.id === id) {
+          previous = h;
+          return { ...h, ...patch };
+        }
+        return h;
+      }),
+    );
+    try {
+      const res = await fetch(`/api/habits/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error(`update failed: ${res.status}`);
+      const updated: Habit = await res.json();
+      setHabits((prev) => prev.map((h) => (h.id === id ? updated : h)));
+      return updated;
+    } catch (err) {
+      console.error('useHabits: updateHabit error', err);
+      if (previous) {
+        const prevHabit = previous;
+        setHabits((prev) => prev.map((h) => (h.id === id ? prevHabit : h)));
+      }
+      throw err;
+    }
+  }, []);
+
+  // Delete a habit (and its entries) server-side; optimistic removal with
+  // rollback on failure.
+  const removeHabit = useCallback(async (id: string) => {
+    let previous: Habit | undefined;
+    let previousIndex = -1;
+    setHabits((prev) => {
+      previousIndex = prev.findIndex((h) => h.id === id);
+      if (previousIndex >= 0) previous = prev[previousIndex];
+      return prev.filter((h) => h.id !== id);
+    });
+    try {
+      const res = await fetch(`/api/habits/${id}`, { method: 'DELETE' });
+      if (!res.ok && res.status !== 204) throw new Error(`delete failed: ${res.status}`);
+    } catch (err) {
+      console.error('useHabits: removeHabit error', err);
+      if (previous) {
+        const prevHabit = previous;
+        const idx = previousIndex;
+        setHabits((prev) => {
+          const copy = [...prev];
+          copy.splice(idx < 0 ? copy.length : idx, 0, prevHabit);
+          return copy;
+        });
+      }
+      throw err;
+    }
+  }, []);
+
   const toggle = useCallback(async (habitId: string, date: string) => {
     const month = date.slice(0, 7);
     if (!entriesCache.current[month]) {
@@ -145,6 +213,9 @@ export function useHabits() {
     ensureMonthLoaded,
     toggle,
     reloadMonth,
+    addHabit,
+    updateHabit,
+    removeHabit,
   } as const;
 }
 
