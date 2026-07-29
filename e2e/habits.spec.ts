@@ -87,4 +87,49 @@ test.describe('Habit Tracker Page', () => {
     await expect(page.getByLabel(`Toggle ${nameA} visibility — currently shown`)).toBeVisible();
     await expect(page.getByLabel(`Toggle ${nameB} visibility — currently shown`)).toBeVisible();
   });
+
+  test('supports arrow-key navigation between table cells', async ({ page }) => {
+    await page.goto('/habits');
+
+    const nameA = `E2E Nav A ${Date.now()}`;
+    await page.getByLabel('Habit name').fill(nameA);
+    await page.getByLabel('Icon').selectOption('circle');
+    await page.getByLabel('Color').fill(uniqueColor());
+    await page.getByTestId('habit-editor-submit').click();
+    const rowA = page.locator('tr', {
+      has: page.locator('span[data-testid^="habit-name-"]', { hasText: nameA }),
+    });
+    await expect(rowA).toBeVisible();
+
+    const nameB = `E2E Nav B ${Date.now()}`;
+    await page.getByLabel('Habit name').fill(nameB);
+    await page.getByLabel('Icon').selectOption('square');
+    await page.getByLabel('Color').fill(uniqueColor());
+    await page.getByTestId('habit-editor-submit').click();
+    const rowB = page.locator('tr', {
+      has: page.locator('span[data-testid^="habit-name-"]', { hasText: nameB }),
+    });
+    await expect(rowB).toBeVisible();
+
+    const firstCellA = rowA.locator('button[data-testid^="habit-cell-"]').first();
+    const secondCellA = rowA.locator('button[data-testid^="habit-cell-"]').nth(1);
+    const firstCellB = rowB.locator('button[data-testid^="habit-cell-"]').first();
+
+    await firstCellA.focus();
+    await expect(firstCellA).toHaveAttribute('tabindex', '0');
+
+    await page.keyboard.press('ArrowRight');
+    await expect(secondCellA).toBeFocused();
+    await expect(firstCellA).toHaveAttribute('tabindex', '-1');
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(firstCellA).toBeFocused();
+
+    await page.keyboard.press('ArrowDown');
+    await expect(firstCellB).toBeFocused();
+
+    // Space toggles the focused cell without leaving keyboard control.
+    await page.keyboard.press(' ');
+    await expect(firstCellB).toHaveAttribute('aria-pressed', 'true');
+  });
 });

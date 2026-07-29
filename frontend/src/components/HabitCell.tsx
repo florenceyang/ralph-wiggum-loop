@@ -1,22 +1,24 @@
 import React from 'react';
 
+export type ArrowKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight' | 'Home' | 'End';
+
 export type HabitCellProps = {
   date: string; // YYYY-MM-DD
   marked: boolean;
   icon: string;
   color: string;
   size?: number;
+  name?: string;
+  tabIndex?: number;
   onToggle?: (date: string) => void;
+  onArrow?: (date: string, key: ArrowKey) => void;
+  onFocusCell?: (date: string) => void;
 };
 
-export const HabitCell: React.FC<HabitCellProps> = ({
-  date,
-  marked,
-  icon,
-  color,
-  size = 36,
-  onToggle,
-}) => {
+export const HabitCell = React.forwardRef<HTMLButtonElement, HabitCellProps>(function HabitCell(
+  { date, marked, icon, color, size = 36, name, tabIndex, onToggle, onArrow, onFocusCell },
+  ref,
+) {
   const handleClick = () => onToggle && onToggle(date);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -24,6 +26,19 @@ export const HabitCell: React.FC<HabitCellProps> = ({
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleClick();
+      return;
+    }
+    if (
+      onArrow &&
+      (e.key === 'ArrowUp' ||
+        e.key === 'ArrowDown' ||
+        e.key === 'ArrowLeft' ||
+        e.key === 'ArrowRight' ||
+        e.key === 'Home' ||
+        e.key === 'End')
+    ) {
+      e.preventDefault();
+      onArrow(date, e.key);
     }
   };
 
@@ -42,11 +57,14 @@ export const HabitCell: React.FC<HabitCellProps> = ({
 
   return (
     <button
+      ref={ref}
       type="button"
       aria-pressed={marked}
-      aria-label={`Habit: ${icon} — ${date} — ${marked ? 'marked' : 'unmarked'}`}
+      aria-label={`Habit: ${name ?? icon} — ${date} — ${marked ? 'marked' : 'unmarked'}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      onFocus={() => onFocusCell && onFocusCell(date)}
+      tabIndex={tabIndex}
       style={style}
       data-testid={`habit-cell-${date}`}
     >
@@ -54,6 +72,6 @@ export const HabitCell: React.FC<HabitCellProps> = ({
       {icon ? icon.charAt(0).toUpperCase() : '●'}
     </button>
   );
-};
+});
 
 export default HabitCell;

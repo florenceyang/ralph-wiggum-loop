@@ -1,5 +1,5 @@
 import React from 'react';
-import HabitCell from './HabitCell';
+import HabitCell, { ArrowKey } from './HabitCell';
 
 export type Habit = {
   id: string;
@@ -50,6 +50,53 @@ export const HabitTable: React.FC<HabitTableProps> = ({
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [draftName, setDraftName] = React.useState('');
 
+  // Roving tabindex: only one grid cell is tab-stoppable at a time; arrow
+  // keys move both focus and the active cell between habit rows/day columns.
+  const [activeCell, setActiveCell] = React.useState({ row: 0, col: 0 });
+  const cellRefs = React.useRef<(HTMLButtonElement | null)[][]>([]);
+
+  const focusCell = (row: number, col: number) => {
+    const clampedRow = Math.max(0, Math.min(habits.length - 1, row));
+    const clampedCol = Math.max(0, Math.min(days.length - 1, col));
+    // Focusing the target cell triggers its onFocus handler, which updates
+    // activeCell — avoid a redundant setState here.
+    cellRefs.current[clampedRow]?.[clampedCol]?.focus();
+  };
+
+  // Keep the active cell within bounds if habits/days shrink (e.g. a habit
+  // is deleted or the month changes), so a tab stop always exists.
+  React.useEffect(() => {
+    setActiveCell((prev) => ({
+      row: Math.min(prev.row, Math.max(0, habits.length - 1)),
+      col: Math.min(prev.col, Math.max(0, days.length - 1)),
+    }));
+  }, [habits.length, days.length]);
+
+  const handleArrow = (row: number, col: number, key: ArrowKey) => {
+    switch (key) {
+      case 'ArrowUp':
+        focusCell(row - 1, col);
+        break;
+      case 'ArrowDown':
+        focusCell(row + 1, col);
+        break;
+      case 'ArrowLeft':
+        focusCell(row, col - 1);
+        break;
+      case 'ArrowRight':
+        focusCell(row, col + 1);
+        break;
+      case 'Home':
+        focusCell(row, 0);
+        break;
+      case 'End':
+        focusCell(row, days.length - 1);
+        break;
+      default:
+        break;
+    }
+  };
+
   const startEditing = (h: Habit) => {
     if (!onRename) return;
     setEditingId(h.id);
@@ -97,7 +144,7 @@ export const HabitTable: React.FC<HabitTableProps> = ({
         </tr>
       </thead>
       <tbody>
-        {habits.map((h) => (
+        {habits.map((h, hIdx) => (
           <tr key={h.id}>
             <td>
               {editingId === h.id ? (
@@ -130,17 +177,26 @@ export const HabitTable: React.FC<HabitTableProps> = ({
                 </button>
               )}
             </td>
-            {days.map((d) => {
+            {days.map((d, dIdx) => {
               const marked = entriesSet.has(`${h.id}|${d}`);
               const highlighted = highlightDate === d;
+              const isActive = activeCell.row === hIdx && activeCell.col === dIdx;
               return (
                 <td key={d} style={{ padding: 4, background: highlighted ? '#eff6ff' : undefined }}>
                   <HabitCell
+                    ref={(el) => {
+                      if (!cellRefs.current[hIdx]) cellRefs.current[hIdx] = [];
+                      cellRefs.current[hIdx][dIdx] = el;
+                    }}
                     date={d}
                     marked={marked}
                     icon={h.icon}
                     color={h.color}
+                    name={h.name}
+                    tabIndex={isActive ? 0 : -1}
                     onToggle={(date) => onToggle && onToggle(h.id, date)}
+                    onArrow={(_date, key) => handleArrow(hIdx, dIdx, key)}
+                    onFocusCell={() => setActiveCell({ row: hIdx, col: dIdx })}
                   />
                 </td>
               );

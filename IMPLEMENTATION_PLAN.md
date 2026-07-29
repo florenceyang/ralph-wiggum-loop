@@ -116,26 +116,50 @@ Fixed pre-existing frontend validation failures that blocked clean verification.
    - Served from `src/app/views/habits.py`
    - Verified by `tests/test_habits_view.py`
 
+## 2026-07-29 completed increment (item 7: keyboard navigation + a11y fix)
+
+### Arrow-key grid navigation implemented in HabitTable/HabitCell
+
+Closed the accessibility gap flagged in the plan: cells were only reachable
+one Tab stop at a time (Enter/Space toggle existed, but no arrow-key movement
+and no roving tabindex), and cell `aria-label`s used the raw icon id instead
+of the habit name (spec: `"Habit: <name> — <date> — marked/unmarked"`).
+
+- `frontend/src/components/HabitCell.tsx`
+  - Converted to `React.forwardRef` so the table can hold direct DOM refs
+    per cell for imperative `.focus()` calls.
+  - Added `name`, `tabIndex`, `onArrow`, `onFocusCell` props.
+  - Fixed `aria-label` to use `name` (falls back to `icon` only if no name
+    is supplied) instead of always using the icon string.
+  - `ArrowUp/Down/Left/Right/Home/End` are intercepted in `onKeyDown` and
+    forwarded via `onArrow(date, key)`; Enter/Space toggle behavior is
+    unchanged.
+- `frontend/src/components/HabitTable.tsx`
+  - Added a `cellRefs` matrix (`(HTMLButtonElement | null)[][]`) and
+    `activeCell` state implementing the standard grid **roving tabindex**
+    pattern: exactly one cell has `tabIndex=0` at a time, all others `-1`.
+  - `handleArrow` maps Up/Down to habit rows and Left/Right to day columns,
+    clamped to grid bounds; Home/End jump to first/last day in the row.
+  - `onFocusCell` keeps `activeCell` in sync when focus moves via Tab (not
+    just arrow keys), and a `useEffect` clamps `activeCell` when habits or
+    the visible day count shrinks (habit deleted, month changed) so a tab
+    stop always exists.
+- Tests:
+  - `frontend/src/components/__tests__/HabitTable.test.tsx` — added cases
+    for: correct `aria-label` using habit name, single tab-stop via roving
+    tabindex, and full arrow/Home/End navigation across rows and columns.
+  - `e2e/habits.spec.ts` — added
+    `supports arrow-key navigation between table cells`, exercising
+    ArrowRight/Left/Down focus movement across two habit rows plus
+    Space-to-toggle on the newly focused cell.
+
+Validation for this increment: `frontend` vitest (14 passed), `tsc --noEmit`
+(clean), `eslint` (clean), `pytest` (13 passed, unaffected), `mypy`/`flake8`
+(clean, unaffected), `playwright test e2e/habits.spec.ts` (5 passed).
+
 ## Remaining work
 
-7. **Accessibility + keyboard navigation between cells** (HIGH)
-   - Remaining gap:
-     - arrow-key navigation across the table grid is still not implemented
-     - keyboard focus movement between days/habits needs explicit coverage
-     - add/verify ARIA labels and screen-reader text for the mounted grid
-   - Already done and should not be re-opened:
-     - Enter/Space toggle within a focused cell
-     - legend filtering shared by table + calendar
-     - calendar-day click highlighting the corresponding table column
-   - Primary files:
-     - `frontend/src/components/HabitTable.tsx`
-     - `frontend/src/components/HabitCell.tsx`
-     - `frontend/src/components/CalendarView.tsx`
-   - Test follow-up:
-     - extend `frontend/src/components/__tests__/HabitApp.test.tsx`
-     - add keyboard-focused e2e coverage in `e2e/habits.spec.ts`
-
-8. **Bulk marking, range selection, and full undo/redo** (HIGH)
+7. **Bulk marking, range selection, and full undo/redo** (HIGH)
    - Remaining gap:
      - shift+click bulk marking
      - drag/range selection
@@ -152,7 +176,7 @@ Fixed pre-existing frontend validation failures that blocked clean verification.
    - Spec refs:
      - `specs/habit-tracker-specifications.md` — editing/interactions
 
-9. **Calendar overflow, richer cell actions, and remaining UX parity** (MEDIUM)
+8. **Calendar overflow, richer cell actions, and remaining UX parity** (MEDIUM)
    - Remaining gap:
      - overflow-state verification/snapshots for days with many habits
      - context menu / secondary cell actions (note, clear, repeat weekly)
@@ -167,28 +191,28 @@ Fixed pre-existing frontend validation failures that blocked clean verification.
      - `frontend/src/components/HabitEditor.tsx`
      - `frontend/src/components/HabitTable.tsx`
 
-10. **Performance / virtualization for large habit counts** (LOW→MEDIUM)
+9. **Performance / virtualization for large habit counts** (LOW→MEDIUM)
     - Table row virtualization is still unimplemented.
     - Keep deferred unless real habit counts make the current DOM size painful.
     - Primary file:
       - `frontend/src/components/HabitTable.tsx`
 
-11. **Docs / CI follow-through** (LOW)
+10. **Docs / CI follow-through** (LOW)
     - Keep developer docs and CI expectations aligned with the current
       habit-only app and validation suite.
     - Relevant files:
       - `README.md`
       - CI/workflow config if present
 
-## Validation baseline after the 2026-07-29 pass
+## Validation baseline after the 2026-07-29 pass (keyboard nav increment)
 
 - `PYTHONPATH=src pytest tests/` → 13 passed
-- `cd frontend && npx vitest run` → 11 passed
+- `cd frontend && npx vitest run` → 14 passed
 - `mypy src/ --ignore-missing-imports` → clean
 - `flake8 src/ tests/` → clean
 - `cd frontend && npx tsc --noEmit` → clean
 - `cd frontend && npm run lint` → clean
-- `npx playwright test --reporter=list` → 4 passed
+- `npx playwright test --reporter=list` → 5 passed
 
 ## Explicit non-goals for the next iteration
 
