@@ -78,3 +78,6 @@ logs/
 # Database
 *.db
 *.sqlite3
+
+# Notes
+notes.md

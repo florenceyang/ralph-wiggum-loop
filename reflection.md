@@ -1,3 +1,5 @@
+# Some interesting things I noticed:
+
 prompting the model with need to use keywords like "plan" and "produce" to triggers not just generic "create"
 
 using gpt-5-mini for spec generation - it wasn't able to generate spec without me explicitly telling it to put it inot spec file

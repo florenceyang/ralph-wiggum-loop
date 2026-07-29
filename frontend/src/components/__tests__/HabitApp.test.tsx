@@ -85,4 +85,49 @@ describe('HabitApp (integration)', () => {
 
     await waitFor(() => expect(screen.getByTestId('current-month-label').textContent).not.toBe(initialLabel));
   });
+
+  it('supports multi-step undo (Ctrl+Z) and redo (Ctrl+Shift+Z) across two toggles', async () => {
+    render(<HabitApp />);
+    await waitFor(() => expect(screen.getByTestId('habit-name-h1')).toBeTruthy());
+
+    const today = formatLocalDate(new Date());
+    const cell = screen.getAllByTestId(`habit-cell-${today}`)[0];
+    // h1 starts marked (from the mocked /api/entries?month= response); toggle unmarks it.
+    expect(cell).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(cell);
+    await waitFor(() => expect(cell).toHaveAttribute('aria-pressed', 'false'));
+
+    // Undo restores it to marked.
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    await waitFor(() => expect(cell).toHaveAttribute('aria-pressed', 'true'));
+
+    // Redo re-applies the unmark.
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true, shiftKey: true });
+    await waitFor(() => expect(cell).toHaveAttribute('aria-pressed', 'false'));
+  });
+
+  it('undoes a whole drag/range-marking action in one Ctrl+Z', async () => {
+    render(<HabitApp />);
+    await waitFor(() => expect(screen.getByTestId('habit-name-h1')).toBeTruthy());
+
+    // Drag from an unmarked day (tomorrow) to the day after — both start
+    // unmarked, so the whole dragged range should end up marked=true.
+    const d = new Date();
+    const tomorrow = formatLocalDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
+    const dayAfter = formatLocalDate(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 2));
+
+    const startCell = screen.getAllByTestId(`habit-cell-${tomorrow}`)[0];
+    const endCell = screen.getAllByTestId(`habit-cell-${dayAfter}`)[0];
+
+    fireEvent.mouseDown(startCell);
+    fireEvent.mouseEnter(endCell);
+    fireEvent.mouseUp(window);
+
+    await waitFor(() => expect(endCell).toHaveAttribute('aria-pressed', 'true'));
+
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+
+    await waitFor(() => expect(endCell).toHaveAttribute('aria-pressed', 'false'));
+  });
 });

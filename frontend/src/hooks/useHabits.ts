@@ -69,6 +69,15 @@ export function useHabits() {
     await ensureMonthLoaded(month);
   }, [ensureMonthLoaded]);
 
+  // Synchronous lookup of a habit/date's current `done` state from the
+  // already-loaded month cache. Used by range-marking and undo/redo to know
+  // what to restore/apply without waiting on a network round-trip.
+  const isDone = useCallback((habitId: string, date: string): boolean => {
+    const month = date.slice(0, 7);
+    const map = entriesCache.current[month];
+    return !!(map && map[`${habitId}|${date}`]?.done);
+  }, []);
+
   // Add a habit that was already created server-side (e.g. via HabitEditor's
   // own POST) to local state, so the table/calendar/legend pick it up
   // without a full reload.
@@ -206,12 +215,80 @@ export function useHabits() {
     }
   }, [ensureMonthLoaded]);
 
+  // Set an explicit `done` value for one or more (habitId, date) pairs in a
+  // single request via POST /api/entries/bulk. Used for drag/Shift range
+  // marking and for undo/redo, where every affected cell must land on a
+  // specific known state (not just "toggle") in one atomic, revertible call.
+  const bulkSetEntries = useCallback(
+    async (items: { habitId: string; date: string; done: boolean }[]) => {
+      if (items.length === 0) return;
+
+      const previousByKey: Record<string, { month: string; entry: Entry | undefined }> = {};
+      for (const it of items) {
+        const month = it.date.slice(0, 7);
+        if (!entriesCache.current[month]) entriesCache.current[month] = {};
+        const key = `${it.habitId}|${it.date}`;
+        previousByKey[key] = { month, entry: entriesCache.current[month][key] };
+      }
+
+      // optimistic apply
+      for (const it of items) {
+        const month = it.date.slice(0, 7);
+        const key = `${it.habitId}|${it.date}`;
+        const existing = previousByKey[key].entry;
+        const tmpEntry: Entry = {
+          id: existing?.id ?? `tmp-${Math.random().toString(36).slice(2)}`,
+          habit_id: it.habitId,
+          date: it.date,
+          done: it.done,
+        };
+        entriesCache.current[month] = { ...entriesCache.current[month], [key]: tmpEntry };
+      }
+      setTick((t) => t + 1);
+
+      try {
+        const res = await fetch('/api/entries/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            entries: items.map((it) => ({ habit_id: it.habitId, date: it.date, done: it.done })),
+          }),
+        });
+        if (!res.ok) throw new Error(`bulk update failed: ${res.status}`);
+        const json = await res.json();
+        const updated: Entry[] = json.updated || [];
+        for (const e of updated) {
+          const month = e.date.slice(0, 7);
+          const key = `${e.habit_id}|${e.date}`;
+          entriesCache.current[month] = { ...entriesCache.current[month], [key]: e };
+        }
+        setTick((t) => t + 1);
+      } catch (err) {
+        console.error('useHabits: bulkSetEntries error', err);
+        // revert every item to its previous state
+        for (const it of items) {
+          const key = `${it.habitId}|${it.date}`;
+          const { month, entry } = previousByKey[key];
+          const map = { ...entriesCache.current[month] };
+          if (entry) map[key] = entry;
+          else delete map[key];
+          entriesCache.current[month] = map;
+        }
+        setTick((t) => t + 1);
+        throw err;
+      }
+    },
+    [],
+  );
+
   return {
     habits,
     loadHabits,
     entriesForMonth,
     ensureMonthLoaded,
     toggle,
+    isDone,
+    bulkSetEntries,
     reloadMonth,
     addHabit,
     updateHabit,

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import HabitTable from '../HabitTable';
 
 describe('HabitTable', () => {
@@ -89,5 +89,79 @@ describe('HabitTable', () => {
 
     fireEvent.keyDown(lastDay, { key: 'Home' });
     expect(day1).toHaveFocus();
+  });
+
+  it('marks a range of cells for one habit when dragging (mousedown -> mouseenter -> mouseup)', () => {
+    const habits = [{ id: 'h1', name: 'Meditation', icon: 'heart', color: '#ff0000' }];
+    const onRangeToggle = vi.fn();
+
+    render(<HabitTable habits={habits} month="2026-07" entries={[]} onRangeToggle={onRangeToggle} />);
+
+    const day1 = screen.getByTestId('habit-cell-2026-07-01');
+    const day3 = screen.getByTestId('habit-cell-2026-07-03');
+
+    fireEvent.mouseDown(day1);
+    fireEvent.mouseEnter(day3);
+    fireEvent.mouseUp(window);
+
+    expect(onRangeToggle).toHaveBeenCalledWith('h1', ['2026-07-01', '2026-07-02', '2026-07-03'], true);
+  });
+
+  it('does not fire onRangeToggle for a mousedown/mouseup on the same cell (plain click)', () => {
+    const habits = [{ id: 'h1', name: 'Meditation', icon: 'heart', color: '#ff0000' }];
+    const onRangeToggle = vi.fn();
+
+    render(<HabitTable habits={habits} month="2026-07" entries={[]} onRangeToggle={onRangeToggle} />);
+
+    const day1 = screen.getByTestId('habit-cell-2026-07-01');
+    fireEvent.mouseDown(day1);
+    fireEvent.mouseUp(window);
+
+    expect(onRangeToggle).not.toHaveBeenCalled();
+  });
+
+  it('marks a range between the active cell and a Shift+Click target', () => {
+    const habits = [{ id: 'h1', name: 'Meditation', icon: 'heart', color: '#ff0000' }];
+    const onRangeToggle = vi.fn();
+
+    render(<HabitTable habits={habits} month="2026-07" entries={[]} onRangeToggle={onRangeToggle} />);
+
+    const day1 = screen.getByTestId('habit-cell-2026-07-01');
+    const day4 = screen.getByTestId('habit-cell-2026-07-04');
+
+    act(() => {
+      day1.focus();
+    });
+    fireEvent.click(day4, { shiftKey: true });
+
+    expect(onRangeToggle).toHaveBeenCalledWith(
+      'h1',
+      ['2026-07-01', '2026-07-02', '2026-07-03', '2026-07-04'],
+      true,
+    );
+  });
+
+  it('extends the range session with repeated Shift+ArrowRight presses', () => {
+    const habits = [{ id: 'h1', name: 'Meditation', icon: 'heart', color: '#ff0000' }];
+    const onRangeToggle = vi.fn();
+
+    render(<HabitTable habits={habits} month="2026-07" entries={[]} onRangeToggle={onRangeToggle} />);
+
+    const day1 = screen.getByTestId('habit-cell-2026-07-01');
+    act(() => {
+      day1.focus();
+    });
+
+    fireEvent.keyDown(day1, { key: 'ArrowRight', shiftKey: true });
+    const day2 = screen.getByTestId('habit-cell-2026-07-02');
+    expect(day2).toHaveFocus();
+    expect(onRangeToggle).toHaveBeenLastCalledWith('h1', ['2026-07-01', '2026-07-02'], true);
+
+    fireEvent.keyDown(day2, { key: 'ArrowRight', shiftKey: true });
+    expect(onRangeToggle).toHaveBeenLastCalledWith(
+      'h1',
+      ['2026-07-01', '2026-07-02', '2026-07-03'],
+      true,
+    );
   });
 });

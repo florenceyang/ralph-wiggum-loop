@@ -29,15 +29,20 @@ function shiftMonth(month: string, delta: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-// Undo stack entry: the (habitId, date) pair to re-toggle to reverse an action.
-type UndoEntry = { habitId: string; date: string };
+// A single (habitId, date) change captured with both its old and new `done`
+// state, so it can be replayed forward (redo) or backward (undo).
+type Change = { habitId: string; date: string; prevDone: boolean; nextDone: boolean };
+// One user action (a single toggle, or a whole drag/Shift-range) undoes/redoes atomically.
+type Action = Change[];
 
 export const HabitApp: React.FC = () => {
-  const { habits, entriesForMonth, ensureMonthLoaded, toggle, addHabit, updateHabit, removeHabit } = useHabits();
+  const { habits, entriesForMonth, ensureMonthLoaded, toggle, isDone, bulkSetEntries, addHabit, updateHabit, removeHabit } =
+    useHabits();
   const [month, setMonth] = useState<string>(currentMonth());
   const [activeIds, setActiveIds] = useState<Set<string> | null>(null); // null = show all
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
-  const undoStack = useRef<UndoEntry[]>([]);
+  const undoStack = useRef<Action[]>([]);
+  const redoStack = useRef<Action[]>([]);
 
   useEffect(() => {
     ensureMonthLoaded(month);
@@ -52,27 +57,67 @@ export const HabitApp: React.FC = () => {
 
   const handleToggle = useCallback(
     (habitId: string, date: string) => {
-      undoStack.current.push({ habitId, date });
+      const prevDone = isDone(habitId, date);
+      undoStack.current.push([{ habitId, date, prevDone, nextDone: !prevDone }]);
+      redoStack.current = [];
       toggle(habitId, date);
     },
-    [toggle],
+    [toggle, isDone],
+  );
+
+  // Drag or Shift+Click/Arrow range marking: records the whole range as one
+  // undoable action and persists it in a single bulk request.
+  const handleRangeToggle = useCallback(
+    (habitId: string, dates: string[], done: boolean) => {
+      const changes: Change[] = dates.map((date) => ({
+        habitId,
+        date,
+        prevDone: isDone(habitId, date),
+        nextDone: done,
+      }));
+      undoStack.current.push(changes);
+      redoStack.current = [];
+      bulkSetEntries(changes.map((c) => ({ habitId: c.habitId, date: c.date, done: c.nextDone }))).catch(() => {
+        /* rollback handled inside useHabits */
+      });
+    },
+    [bulkSetEntries, isDone],
+  );
+
+  const applyAction = useCallback(
+    (action: Action, direction: 'prevDone' | 'nextDone') => {
+      bulkSetEntries(action.map((c) => ({ habitId: c.habitId, date: c.date, done: c[direction] }))).catch(() => {
+        /* rollback handled inside useHabits */
+      });
+    },
+    [bulkSetEntries],
   );
 
   const handleUndo = useCallback(() => {
-    const last = undoStack.current.pop();
-    if (last) toggle(last.habitId, last.date);
-  }, [toggle]);
+    const action = undoStack.current.pop();
+    if (!action) return;
+    redoStack.current.push(action);
+    applyAction(action, 'prevDone');
+  }, [applyAction]);
+
+  const handleRedo = useCallback(() => {
+    const action = redoStack.current.pop();
+    if (!action) return;
+    undoStack.current.push(action);
+    applyAction(action, 'nextDone');
+  }, [applyAction]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
-        handleUndo();
+        if (e.shiftKey) handleRedo();
+        else handleUndo();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleUndo]);
+  }, [handleUndo, handleRedo]);
 
   const handleLegendToggle = useCallback((habitId: string) => {
     setActiveIds((prev) => {
@@ -163,6 +208,7 @@ export const HabitApp: React.FC = () => {
             month={month}
             entries={entries}
             onToggle={handleToggle}
+            onRangeToggle={handleRangeToggle}
             onRename={handleRename}
             onDelete={handleDelete}
             highlightDate={highlightDate}
