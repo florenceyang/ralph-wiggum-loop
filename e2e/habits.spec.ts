@@ -43,7 +43,7 @@ test.describe('Habit Tracker Page', () => {
     const uniqueName = `E2E Habit ${Date.now()}`;
     await page.getByLabel('Habit name').fill(uniqueName);
     await page.getByLabel('Icon').selectOption('star');
-    await page.getByLabel('Color').fill(uniqueColor());
+    await page.getByTestId('habit-editor-color').fill(uniqueColor());
     await page.getByTestId('habit-editor-submit').click();
 
     const nameCell = page.locator('span[data-testid^="habit-name-"]', { hasText: uniqueName });
@@ -72,14 +72,14 @@ test.describe('Habit Tracker Page', () => {
     const nameA = `E2E A ${Date.now()}`;
     await page.getByLabel('Habit name').fill(nameA);
     await page.getByLabel('Icon').selectOption('heart');
-    await page.getByLabel('Color').fill(uniqueColor());
+    await page.getByTestId('habit-editor-color').fill(uniqueColor());
     await page.getByTestId('habit-editor-submit').click();
     await expect(page.locator('span[data-testid^="habit-name-"]', { hasText: nameA })).toBeVisible();
 
     const nameB = `E2E B ${Date.now()}`;
     await page.getByLabel('Habit name').fill(nameB);
     await page.getByLabel('Icon').selectOption('diamond');
-    await page.getByLabel('Color').fill(uniqueColor());
+    await page.getByTestId('habit-editor-color').fill(uniqueColor());
     await page.getByTestId('habit-editor-submit').click();
     await expect(page.locator('span[data-testid^="habit-name-"]', { hasText: nameB })).toBeVisible();
 
@@ -94,7 +94,7 @@ test.describe('Habit Tracker Page', () => {
     const nameA = `E2E Nav A ${Date.now()}`;
     await page.getByLabel('Habit name').fill(nameA);
     await page.getByLabel('Icon').selectOption('circle');
-    await page.getByLabel('Color').fill(uniqueColor());
+    await page.getByTestId('habit-editor-color').fill(uniqueColor());
     await page.getByTestId('habit-editor-submit').click();
     const rowA = page.locator('tr', {
       has: page.locator('span[data-testid^="habit-name-"]', { hasText: nameA }),
@@ -104,7 +104,7 @@ test.describe('Habit Tracker Page', () => {
     const nameB = `E2E Nav B ${Date.now()}`;
     await page.getByLabel('Habit name').fill(nameB);
     await page.getByLabel('Icon').selectOption('square');
-    await page.getByLabel('Color').fill(uniqueColor());
+    await page.getByTestId('habit-editor-color').fill(uniqueColor());
     await page.getByTestId('habit-editor-submit').click();
     const rowB = page.locator('tr', {
       has: page.locator('span[data-testid^="habit-name-"]', { hasText: nameB }),

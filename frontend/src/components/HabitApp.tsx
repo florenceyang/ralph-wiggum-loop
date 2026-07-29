@@ -15,6 +15,7 @@ import HabitEditor from './HabitEditor';
 import HabitTable, { type Habit } from './HabitTable';
 import CalendarView from './CalendarView';
 import Legend from './Legend';
+import TodoBoard from './TodoBoard';
 import useHabits from '../hooks/useHabits';
 
 function currentMonth(): string {
@@ -173,6 +174,8 @@ export const HabitApp: React.FC = () => {
           <Legend habits={habits} activeIds={activeIds} onToggle={handleLegendToggle} />
         </div>
       </div>
+
+      <TodoBoard />
     </div>
   );
 };
