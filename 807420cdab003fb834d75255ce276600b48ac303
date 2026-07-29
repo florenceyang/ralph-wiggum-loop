@@ -1,0 +1,62 @@
+## AI Agent Reasoning
+
+### Context
+IMPLEMENTATION_PLAN.md and a prior gap-analysis spec
+(specs/habit-tracker-v2-specifications.md, already present in the working
+tree from a previous session) both identified the same root problem: all
+the habit-tracker React components and the useHabits hook were built and
+unit-tested in isolation, but the actual /habits route rendered a
+completely separate, hand-written vanilla-JS CRUD list. This was the
+highest-impact gap since it made ~500 lines of tested component code
+unreachable by real users and left the core spec'd UX (scrollable table +
+synced calendar + legend) entirely missing from the running app.
+
+### Decisions Made
+- Composition root as a plain component (HabitApp.tsx) rather than putting
+  all logic directly in the island wrapper: keeps the island itself a thin,
+  untestable-but-trivial shim (mirroring the existing game island pattern)
+  while HabitApp can be rendered directly in vitest without any DOM-mounting
+  machinery.
+- Legend filtering uses 'isolate on click' semantics (clicking a habit in
+  the legend shows only that habit, clicking again restores 'show all')
+  rather than a plain per-habit toggle set that starts empty. This matches
+  the spec's 'toggles visibility ... across both views' language while
+  giving a more useful default interaction for a legend with many habits.
+- Removed Space Invaders entirely rather than leaving it dormant: since
+  root already redirected to /habits and no route pointed at /game, the
+  entire game module (routes, templates, TS engine, tests, e2e) was dead
+  code with zero external reachability. Deleting it removes maintenance
+  burden without any behavior change for real users.
+- Fixed the duplicate Alembic migration heads (9b1c2d3e4f5a and
+  f1a2b3c4d5e6 both had down_revision = e31396db40b1) by rechaining rather
+  than merging: a linear chain (hello -> habits/entries -> drop hello) is
+  simpler to reason about than an Alembic merge revision, and there was no
+  reason for the two migrations to be independent branches — this was a
+  straightforward oversight (two migrations authored against the same base
+  without rebasing), not an intentional branch.
+- Fixed frontend typecheck/lint (pre-existing failures on every test file,
+  not introduced by this change) via ambient type declarations placed
+  inside src/ (test-globals.d.ts) rather than adding @types/node, since the
+  project does not otherwise depend on Node types and only needs the single
+  ambient 'global' identifier used by fetch-stubbing tests.
+
+### Trade-offs
+- Implemented only a single-level Ctrl/Cmd+Z undo (re-toggle last cell)
+  rather than a full undo/redo stack with Shift+Arrow range selection and
+  bulk-marking, which the original spec also calls for. These are
+  documented as the next-highest-priority remaining gaps in
+  IMPLEMENTATION_PLAN.md rather than attempted in this pass, to keep this
+  increment focused and fully verified (unit + integration + e2e) rather
+  than partially implementing several large interaction features at once.
+- e2e tests generate random hex colors per run (icon+color uniqueness is
+  enforced server-side) rather than resetting the dev database between
+  runs, since there was no existing test-database-reset tooling in the
+  repo and adding one was out of scope for this increment.
+
+### References
+- Prior gap analysis: specs/habit-tracker-v2-specifications.md
+- Validation: PYTHONPATH=src pytest tests/ (13 passed), mypy src/ (clean),
+  flake8 (clean), cd frontend && npx vitest run (11 passed), npx tsc
+  --noEmit (clean), npm run lint (clean), npx playwright test
+  --reporter=list (4/4, run against a live script/server + Postgres after
+  running flask db upgrade).
