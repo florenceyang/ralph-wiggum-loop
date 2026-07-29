@@ -23,3 +23,7 @@ V3 - add to-do list
 
 stronger models produce much more concise, better-performing results
 gemini asked follow-up questions
+
+runs so much faster
+
+sometimes loop doesn't finish running through all of implementation plan. need to re-run to keep executing rest of implementation plan
