@@ -1,0 +1,67 @@
+## AI Agent Reasoning
+
+### Context
+IMPLEMENTATION_PLAN.md item 1 (highest priority): spec v3 §2.3 required
+drag-across-cells range marking, Shift+Click bulk range selection, and a
+real multi-step undo/redo stack (Ctrl+Z / Ctrl+Shift+Z), on top of the
+already-existing but frontend-unused POST /api/entries/bulk endpoint.
+
+### Decisions Made
+- Kept HabitCell's existing onToggle(date)/onArrow(date,key) single-arg
+  contracts unchanged and added new *optional* props (onShiftToggle,
+  onShiftArrow, onCellMouseDown/onCellMouseEnter) instead of changing
+  onToggle's signature to include shiftKey. This avoided breaking the
+  pre-existing HabitCell.test.tsx assertion
+  `expect(onToggle).toHaveBeenCalledWith('2026-07-10')` (a 2-arg call
+  would have failed that assertion) and kept the diff additive.
+- Drag commit only fires onRangeToggle if the pointer moved to a
+  different column between mousedown and mouseup. Real browsers don't
+  fire a click event when mousedown/mouseup happen on different
+  elements, but a plain click (no movement) does both a mousedown+mouseup
+  AND a click on the same element — without this guard, a simple click
+  would apply the toggle twice (once via the range path, once via
+  onToggle), silently reverting it. Verified via a dedicated test
+  ('does not fire onRangeToggle for a mousedown/mouseup on the same
+  cell').
+- Range target value convention: for pointer-drag, the anchor cell's
+  *current* marked state determines the target for the whole range
+  (targetDone = !isMarked(anchorCell)) — mirrors 'click toggles this
+  cell, drag extends that same toggle to the whole range'. Shift+Click
+  and Shift+Arrow use the same convention against the clicked/target
+  cell so behavior is consistent across all three interaction modes.
+- Shift+Click/Shift+Arrow share one ref-based 'range session'
+  (shiftAnchor) so repeated Shift+ArrowRight presses keep extending the
+  same range (spreadsheet-like) instead of restarting from the last
+  cursor position each keypress. Any plain (non-shift) interaction
+  clears the session.
+- Undo/redo model: switched from a single flat undo array of
+  (habitId,date) pairs to undoStack/redoStack of Action = Change[]
+  (Change = {habitId, date, prevDone, nextDone}), so a whole drag/Shift
+  range undoes or redoes as one atomic action via a single
+  bulkSetEntries call, not N individual toggles. Any new action clears
+  the redo stack (standard undo/redo semantics).
+- Bug found and fixed during implementation: committing the range
+  inside setDragState's functional updater (setDragState(prev => {...
+  side effect ...})) triggered a real React
+  'Cannot update a component while rendering a different component'
+  warning, because bulkSetEntries synchronously calls setTick() before
+  its first await. Fixed by mirroring drag state into a plain
+  dragStateRef and doing the commit as an ordinary function call from
+  the native window 'mouseup' listener, outside any setState updater.
+
+### Trade-offs
+- bulkSetEntries persists undo/redo 'unmark' actions as entries with
+  done=false (via the bulk endpoint) rather than DELETEing them like
+  the original single-cell toggle() does. This differs slightly from
+  toggle()'s DB row lifecycle but is behaviorally identical for the UI
+  (only done=true entries are ever rendered as marked), and reuses the
+  same bulk endpoint uniformly for range apply, undo, and redo.
+- No new Playwright e2e coverage was added for drag/Shift-range/undo-
+  redo in this pass; relied on unit test coverage (HabitTable.test.tsx,
+  HabitApp.test.tsx) as the primary signal given time constraints. Left
+  as a follow-up in IMPLEMENTATION_PLAN.md if deeper confidence is
+  needed on real browser drag behavior.
+
+### References
+- Spec: specs/habit-tracker-v3-specifications.md §2.3
+- Plan: IMPLEMENTATION_PLAN.md item 1 (now folded into 'Status snapshot')
